@@ -7,24 +7,39 @@
 ;(require "TDA_pull.rkt")
 (require "TDA_zonas.rkt") 
 
-;Función : add , añade los cambios locales al index 
-;Dominio :
+;Función : Commit que añade los commit del index al local repository repository
+;Dominio : Dos variables "string" y zonas
 ;Recorrido: lista de nombre s de archivos
 ;Tipo de Recursión: recursion natural o de cola , siendo disntinto
 ;al de pull
-(define (commit string)
-  (lambda (zonas)
-    (list ("\n" ) )))
+(define (commit)
+  (lambda (string)
+    (if (string? string)
+        ;True case
+        (lambda (funcion)
+          (if (equal? funcion zonas)
+              ;true case
+              "Movemos hacia el index"
+              ;else
+              (null) )
+          ;Movemos los commit de index a Local-Repository
+          )
+        ;Else
+        ((null) ) ) ) )
 
 ;Función : push
 ;Dominio :
 ;Recorrido: lista de nombre s de archivos
 ;Tipo de Recursión: recursion natural o de cola , siendo disntinto
 ;al de pull
-(define (push zona)
-  (
-   ;mover de remote a local repository
-   display("buenardo")))
+(define (push)
+  (lambda (funcion)
+    (if (equal? funcion zonas)
+        ;True Case
+        ;mover desde local repository a remote repository
+        ("Movemos los commit al remote repository")
+        ;else
+        (display "No ha ingresado el parametro correcto") ) ) )
 
 
 ;Función : add , añade los cambios locales al index 
@@ -33,7 +48,17 @@
 ;Tipo de Recursión: recursion natural o de cola , siendo disntinto
 ;al de pull
 (define add
-  (lambda (zonas)
+  (lambda (lista)
+    (if (list? lista)
+        ;True case
+        (lambda (funcion)
+          (if (equal? funcion zonas) ) )
+        ;False
+        ("ingrese una lista"))
+    ))
+
+(define add-all
+  (lambda (funcion)
     ((zonas)1)))
 
 
@@ -42,13 +67,23 @@
 ;Función pull que recibe zonas y mueve de remote a local repository     
 ;Dominio :
 ;Recorrido: 
-;Tipo de Recursión: recursion natural o de cola , siendo disntinto
-;al de add
+;Tipo de Recursión: recursion natural o de cola , siendo disntinto al de add
 ; Ej (pull zonas)
          ; ((git pull)zonas)
 (define (pull)
   (lambda (funcion)
-    (funcion)
+    (if (equal? funcion zonas)
+        ;true case , pregunto si acaso la lista se encuentra vacía 
+        (if (empty? remote-repository )
+            ;en caso de estarlo digo que el remote repository esta vacío
+            "El remote repository se encuentra vacío"
+            ;else , de caso contrario
+            ;RETORNO UNA LISTA CON TODOS LOS COMMITS A TRAVES DE UNA RECURSIÓN NATURAL
+            ;cada commit en una lista y lo paso al local repository
+            
+            "Vamos a traer sus cosas a local repository")
+        ;else
+        (null))
     ))
 
 
@@ -60,20 +95,16 @@
 (define (git comando)
   (cond
     [(equal? comando pull)
-    (lambda (zonas)
-    ((zonas)1))]
+    (pull)]
 
     [(equal? comando push)
-    (lambda (zonas)
-    ((zonas)1))]
+     (push)]
 
     [(equal? comando add)
-    (lambda (zonas)
-    ((zonas)2))]
+     (add)]
 
     [(equal? comando commit)
-    (lambda (zonas)
-    ((zonas)2))]
+     (commit)]
     ;else
-    [else (display "malardo")])
+    [else (display "Comando Inválido")])
 )
