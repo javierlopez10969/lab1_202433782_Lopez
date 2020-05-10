@@ -7,7 +7,7 @@
 ;(require "TDA_pull.rkt")
 (require "TDA_zonas.rkt") 
 
-;Función : Commit que añade los commit del index al local repository repository
+  ;Función : Commit que añade los commit del index al local repository repository
 ;Dominio : Dos variables "string" y zonas
 ;Recorrido: lista de nombre s de archivos
 ;Tipo de Recursión: recursion natural o de cola , siendo disntinto
@@ -52,10 +52,13 @@
     (if (list? lista)
         ;True case
         (lambda (funcion)
-          (if (equal? funcion zonas) ) )
+          (if (equal? funcion zonas)
+              ;añadimos
+              "Añadir"
+              "Ignroamos ") )
         ;False
-        ("ingrese una lista"))
-    ))
+        ("ingrese una lista") )
+    ) )
 
 (define add-all
   (lambda (funcion)
@@ -69,24 +72,21 @@
 ;Recorrido: 
 ;Tipo de Recursión: recursion natural o de cola , siendo disntinto al de add
 ; Ej (pull zonas)
-         ; ((git pull)zonas)
+; ((git pull)zonas)
 (define (pull)
   (lambda (funcion)
     (if (equal? funcion zonas)
         ;true case , pregunto si acaso la lista se encuentra vacía 
-        (if (empty? remote-repository )
+        (if(empty?((zonas)1) )
             ;en caso de estarlo digo que el remote repository esta vacío
             "El remote repository se encuentra vacío"
             ;else , de caso contrario
             ;RETORNO UNA LISTA CON TODOS LOS COMMITS A TRAVES DE UNA RECURSIÓN NATURAL
             ;cada commit en una lista y lo paso al local repository
-            
             "Vamos a traer sus cosas a local repository")
         ;else
         (null))
     ))
-
-
 
 ;Función git que recibe comandos y devuelve estos mismos
 ;Dominio :
