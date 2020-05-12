@@ -79,7 +79,9 @@
         ;true case , pregunto si acaso la lista se encuentra vacía 
         (if(empty?((zonas)1) )
             ;en caso de estarlo digo que el remote repository esta vacío
+           
             "El remote repository se encuentra vacío"
+            
             ;else , de caso contrario
             ;RETORNO UNA LISTA CON TODOS LOS COMMITS A TRAVES DE UNA RECURSIÓN NATURAL
             ;cada commit en una lista y lo paso al local repository
