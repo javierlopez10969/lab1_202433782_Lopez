@@ -3,12 +3,12 @@
 ;ZONA WOKSPACE : Que tiene una lista con los archivos
 ;representados con una lista de listas donde el primer elemento de cada lsita
 ;es el nombre y el resto sus lineas de código
-(define workspace (list  (list "main.c"
+(define workspace (list  (list "main.c\n"
                            "#include <stdio.h> \n"
                             "int main (){ \n"
-                            "printf('Hola') }"
+                            "printf('Hola') }\n"
                             )
-                         (list "busqueda.h"
+                         (list "busqueda.h\n"
                                ) ) )
 
 (define local-repository (list))
@@ -45,36 +45,63 @@
       )
   ))
 
- ;FUNCIONES NECESARIAS
- ;calcular longitud o length
+;FUNCIONES NECESARIAS
+;calcular longitud o length
+;Recursion Natural  , ya que deja espacios pendientes
 ( define (longitud lista)
    ( cond
       [( null? lista) 0]
-      [ else (+ 1 (longitud (rest lista) ) ) ]) )
-  ;Recorrer lista
-  ( define recorrer
-     (lambda (lista)
-       (cond
-         ;Caso borde
-         [(= 1 (longitud lista)) (first lista) ]
-         ;obtengo el primero de la lista
-         [else (first lista) (recorrer (cdr lista))]
-         ) ) )
+      [ else (+ 1 (longitud (cdr lista) ) ) ]) )
+;Función : Que recorre lista de listas y muestra cada elemento como un string
+;Dominio : Lista , N total de listas Entero , I Iterador Entero que se va moviendo
+;entre las listas particulares de la lista general
+;Recorrido: String x String 
+;Tipo de Recursión: recursión de cola , ya que no deja espacios 
+(define recorrer-workspace
+  (lambda (listaG listaP n i string)
+    ;Casos borde
+    ;Caso de Lista Particular pregunto si acaso queda un único elemento en la lista que estoy analizando
+    (cond [(= 1 (longitud listaP) )
+        ;True Case  :
+        ;Devuelve el único elemento de la lista y pregunto si puedo seguir avanzando
+                ;pregunto si el iterador sumado con uno es menor que el largo total
+                (cond [ (< (+ 1 i) n)
+                       ;en caso de serlo retorno el workspace con el iterador sumandole uno
+                       ;y paso a la siguiente lista particular
+                       (recorrer-workspace listaG (list-ref listaG (+ 1 i)) n (+ i 1) (string-append string (car listaP))) ]
+                      ;Else
+                      [else (string-append string (car listaP)) ])]
+        ;Else :
+        ;en caso de que el largo de la lista particular no se encuentre con un solo elemento
+        ;Obtengo el primer elemento de la lista que estoy viendo
+        [ else
+         ;Ahora hago recursión con lo que queda de la lista
+         (recorrer-workspace workspace (cdr listaP) n i (string-append string (car listaP) " ") ) ]
+        )
+    )
+  )
+
+(define stringSalida "")
 ;ZONAS TO STRING
 ;DEVUELVE TODAS LAZ ZONAS EN FORMA DE STRING
+;IDEA : filter string ?  (rest remote-repository)
 (define zonas->string
   (lambda ()
-    (cond
-      ;pregunto si acaso no estan vacías cada una de las zonas
-      ;IDEA : filter string ?  (rest remote-repository)
-      [(not(null? remote-repository ))
-       (recorrer remote-repository)]
-      [(not(null? local-repository )) "hola"]
-      [(not(null? workspace )) "hola"]
-      [(not(null? index )) "hola"]
-      [else "nothing"]
-        
-      ) ) )
-
+    ;pregunto si acaso no estan vacías cada una de las zonas
+    (if (not(null? workspace ))
+        (recorrer-workspace workspace (car workspace) (longitud workspace) 0 stringSalida)
+        #f)
+    (if (not(null? remote-repository ))
+        "hola"
+        "chao")
+    (if (not(null? local-repository ))
+        "hola"
+        "chao")
+    (if (not(null? index ))
+        "hola"
+        "chao") 
+    )
+  )
+(recorrer-workspace workspace (car workspace) (longitud workspace) 0 stringSalida)
 (provide zonas)
 (provide zonas->string)

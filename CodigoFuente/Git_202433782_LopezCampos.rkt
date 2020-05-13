@@ -94,7 +94,8 @@
 ;Dominio :
 ;Recorrido: Un comando dentro del programa
 ;Tipo de Recursión:
-(define (git comando)
+(define git
+  (lambda (comando)
   (cond
     [(equal? comando pull)
     (pull)]
@@ -109,4 +110,5 @@
      (commit)]
     ;else
     [else (display "Comando Inválido")])
-)
+    )
+  )
