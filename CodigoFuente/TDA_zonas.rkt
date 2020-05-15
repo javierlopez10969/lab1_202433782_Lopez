@@ -4,12 +4,14 @@
 ;representados con una lista de listas donde el primer elemento de cada lsita
 ;es el nombre y el resto sus lineas de código
 (define workspace (list  (list "main.c\n"
-                           "#include <stdio.h> \n"
-                            "int main (){ \n"
-                            "printf('Hola') }\n"
-                            )
+                               "#include <stdio.h> \n"
+                               "int main (){ \n"
+                               "printf('Hola') }\n"
+                               )
                          (list "busqueda.h\n"
                                ) ) )
+;Representación
+(define index (list))
 
 (define local-repository (list))
 
@@ -20,13 +22,9 @@
                             "int main (){ \n"
                             "printf('Hola') }"
                             ))
-;Representación
-  
-;ZONA INDEX
-(define index (list ""))
 
 ;Función : ZONAS , consta de 4 zonas
-;Dominio : zona con la cual se va a ingresar
+;Dominio : Entero que representa zona con la cual se va a ingresar
 ;Recorrido: lista de nombre s de archivos
 ;Tipo de Recursión:
 
