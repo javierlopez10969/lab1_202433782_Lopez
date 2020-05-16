@@ -1,5 +1,5 @@
 #lang racket
-
+;TDA ZONAS
 ;ZONA WOKSPACE : Que tiene una lista con los archivos
 ;representados con una lista de listas donde el primer elemento de cada lsita
 ;es el nombre y el resto sus lineas de código
@@ -9,6 +9,9 @@
                                "printf('Hola') }\n"
                                )
                          (list "busqueda.h\n"
+                               "int buscar (int entrada)"
+                               "{busqueda binaria () }"
+                               
                                ) ) )
 ;Representación
 (define index (list))
@@ -100,6 +103,10 @@
         "chao") 
     )
   )
-(recorrer-workspace workspace (car workspace) (longitud workspace) 0 stringSalida)
+
+
+;(recorrer-workspace workspace (car workspace) (longitud workspace) 0 stringSalida)
+
+
 (provide zonas)
 (provide zonas->string)
