@@ -75,7 +75,7 @@
 ; ((git pull)zonas)
 (define (pull)
   (lambda (funcion)
-    (if (equal? funcion zonas)
+    (if (zonas? funcion)
         ;true case , pregunto si acaso la lista se encuentra vacía 
         (if(empty?((zonas)1) )
            ;en caso de estarlo digo que el remote repository esta vacío
@@ -85,28 +85,24 @@
            ;else , de caso contrario
            ;RETORNO UNA LISTA CON TODOS LOS COMMITS A TRAVES DE UNA RECURSIÓN NATURAL
            ;cada commit en una lista y lo paso al local repository
-          (reconstruir-lista ((zonas)1) ((zonas)4) )  )
+          "movemeros sus cosas al local repository")
         ;else
         (null))
     )
   )
 
 ;Función git que recibe comandos y devuelve estos mismos
-;Dominio :
+;Dominio : Funcion X Funcion
 ;Recorrido: Un comando dentro del programa
-;Tipo de Recursión:
 (define git
   (lambda (comando)
   (cond
     [(equal? comando pull)
     (pull)]
-
     [(equal? comando push)
      (push)]
-
     [(equal? comando add)
      (add)]
-
     [(equal? comando commit)
      (commit)]
     ;else
