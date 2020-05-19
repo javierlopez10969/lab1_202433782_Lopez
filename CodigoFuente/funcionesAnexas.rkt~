@@ -1,0 +1,13 @@
+#lang racket
+;FUNCIONES ANEXAS
+(define listaTiempo
+  (lambda () (list
+    (date-second (seconds->date (current-seconds)))
+    (date-minute (seconds->date (current-seconds)))
+    (date-hour (seconds->date (current-seconds)))
+    (date-day (seconds->date (current-seconds)))
+    (date-month (seconds->date (current-seconds)))
+    (date-year (seconds->date (current-seconds)))
+    )
+   )
+  )

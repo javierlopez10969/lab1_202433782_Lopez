@@ -1,24 +1,5 @@
 #lang racket
-;----------------------------------------------------------------------------------------------------------------
-;Funcion Auxiliar
-;FUNCION : calcular longitud o length , su implmentación es solo para saber como funcionaba 
-;Dominio: lista x lista
-;Recorrido : Entero x Entero
-;Recursion Natural  , ya que deja espacios pendientes
-(define longitud
-   (lambda (lista)
-     ;Pregunto si acaso el elemento entregado acaso es una lista
-     (if (list? lista)
-         ;Y la recorro recurisvamente
-         ( cond
-            ;Hasta que llege a ser nulo
-            [( null? lista) 0]
-            ;Si no es nulo añado uno más a la cuenta del longitud y sigo buscando el ultimo elemento (null) de la lista
-            [ else (+ 1 (longitud (cdr lista) ) ) ] )
-         #f) ) )
-;----------------------------------------------------------------------------------------------------------------
-
-
+(require "funcionesAnexas.rkt")
 ;---------------------------------------------------------------------------------------------------------------------------
 ;TDA ZONAS
 ;Función : ZONAS , FUNCION CONSTANTES , consta de 4 zonas (4 listas) que se obtienen por su ref
@@ -31,13 +12,13 @@
    ;es el nombre y el resto sus lineas de código
    ;BEGIN of WORKSPACE---------------------------------------------------------------------------------------
    (list
-    (list "main.c\n"
-          "#include <stdio.h> \n"
+    (list "main.c"
+          "\n#include <stdio.h> \n"
           "int main (){ \n"
           "printf('Hola') }\n"
           )
-    (list "busqueda.h\n"
-          "#include <stdio.h>\n"
+    (list "busqueda.h"
+          "\n#include <stdio.h>\n"
           "//funcion que realiza una busqueda")
     )
    ;END of WORKSPACE ---------------------------------------------------------------------------------------------
@@ -57,27 +38,36 @@
      ;---------------------------------------------------------------------------------------------------------
 
      ;DELTA CAMBIOS----------------------------------------------------------------------------------------------
-    
-     ;Lista que contiene los archivos que han sido cambiados
-     ;FILES CHANGED , lista de elementos que representan para saber que fue lo que se hizo en cada archivo
-     ;El largo de esta lista indica cuantos archivos fueron cambiados
-     ; INSERTIONS   | DELETIONS |  RENAMES   | DELETE mode | CREATEMODE |
-     ; entero con   |entero con |boleano que |boleano que  |boleano que |
-     ; la cantidad  |la cantidad|indica si se|indica si se |indica si se|  
-     ; de           |de lineas  |cambio el   |borro el     |creo el     |
-     ; inserciones  |borradas   |nombre o no |archivo o no |archivo o no|
-     (list
-      (list "nombre de archivo" 1 0 #f #f #t )
+    ;DELTA CAMBIOS QUE SE COMPARAN
+    ;Lista que contiene los archivos que han sido cambiados
+    ;FILES CHANGED , con codigos para saber que fue lo que se hizo en cada archivo
+    ;El largo de esta lista indica cuantos archivos fueron cambiados
+    ; INSERTIONS   | DELETIONS |  RENAMES   | DELETE mode | CREATEMODE |
+    ; entero con   |entero con |lista que   |boleano que  |boleano que |
+    ; la cantidad  |la cantidad|indica los n|indica si se |indica si se|  
+    ; de           |de lineas  |ombres previ|borro el     |creo el     |
+    ; inserciones  |borradas   |os y actual |archivo o no |archivo o no|
+    (list
+     (list "nombre de archivo" 1 0 (list "archivo.c" "nombre archivo") #f #t )
+     )
       
       ;DELTA CAMBIOS----------------------------------------------------------------------------------------------
-      )
+      
      )
    
    ;END of INDEX -----------------------------------------------------------------------------------------------
 
    ;BEGIN of LOCAL-REPOSITORY--------------------------------------------------------------------------------------
    
-   (list)
+   (list
+      ;El list-ref numero 0 muestra el commit mas reciente
+      (list "primer commit" ;nombre del commit
+        '(10 35 22 18 5 2020) ;Fecha realizada
+        ;Copia del worpksace ;Workspace en ese momento
+
+        ;Delta cambios ;Cambios realizados
+        )
+    )
 
    ;END of INDEX -----------------------------------------------------------------------------------------------
 
@@ -136,8 +126,38 @@
           )
            ;FALSE CASE
            "Entrada incorrecta\n")))
-;SELECTOR BUSCAR ARCHIVO en un workspace
 
+;SELECTOR BUSCAR ARCHIVO en un workspace
+(define buscar-archivo
+      (lambda (listaG listaP n i string)
+        ;Casos borde
+        (cond
+          ;Pregunto si acaso el primer elemento de la lista P es igual al nombre que busco
+          [(equal? (car listaP) string) i]
+          ;De caso contrario pregunto si puedo seguir buscando
+          [(< (+ 1 i) n) (buscar-archivo listaG (list-ref listaG (+ 1 i)) n (+ 1 i) string) ]
+          ;De caso que no pueda seguir buscando hago un false
+          [else -1]
+        )
+  )
+  )
+;Funcion accionar buscador
+(define buscar
+  (lambda(string workspace)
+    ;Filtro acerca de las entradas
+    (if (and (list? workspace) (string? string))
+        ;Pregunto si acaso el workspace no esta vacío
+        (if (not (null? workspace))
+            ;Pregunto si acaso el primer elemento no esta vacio
+            (if (not (null? (car workspace)))
+                ;Uso la funcion buscar
+                (buscar-archivo workspace (car workspace) (longitud workspace) 0 string)
+                ;else
+                -1)
+            -1)
+        -1)
+    )
+  )
 
 ;---------------------------------------------------------------------------------------------------------------------------
 
@@ -210,6 +230,8 @@
   )
 
 ;(provide reconstruir-lista)
+;(buscar "busqueda.c" (car zonas))
+
 (provide zonas)
 (provide zonas?)
 (provide zonas->string)
