@@ -191,7 +191,7 @@
 ;MODULO zonas->string
 
 ;Funcion que funciona de accionar el traspaso de workspace a string
-;Dominio : Zonas
+;Dominio : workspace
 ;Recorrido : String x String
 ;Tipo de Recursión: recursión de cola
 (define string-workspace
@@ -261,7 +261,10 @@
          (get-local-repository zonas)
          "\nLocal-repository:\n\n")
         )))
-
+;Funcion que traspasa el index a string mostrando solo los nombres de los commit y su fecha de modificación
+;Como git log
+;Dominio : Zonas
+;Recorrido : String x String
 
 ;ZONAS TO STRING
 ;DEVUELVE TODAS LAZ ZONAS EN FORMA DE STRING

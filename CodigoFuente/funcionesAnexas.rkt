@@ -1,11 +1,39 @@
 #lang racket
+;FUNCION : calcular longitud o length , su implmentación es solo para saber como funcionaba 
+;Dominio: lista x lista
+;Recorrido : Entero x Entero
+;Recursion Natural  , ya que deja espacios pendientes
+(define longitud
+   (lambda (lista)
+     ;Pregunto si acaso el elemento entregado acaso es una lista
+     (if (list? lista)
+         ;Y la recorro recurisvamente
+         ( cond
+            ;Hasta que llege a ser nulo
+            [( null? lista) 0]
+            ;Si no es nulo añado uno más a la cuenta del longitud y sigo buscando el ultimo elemento (null) de la lista
+            [ else (+ 1 (longitud (cdr lista) ) ) ] )
+         #f)))
+
 ;FUNCIONES ANEXAS
 ;Get primero = sinonimo de car
 (define get-primero car)
 ;Get resto = sinonimo de cdr
 (define get-resto cdr)
 ;Selector de Zonas segun indice sinonimo de list-ref
-(define selectorIndice list-ref)
+(define selectorIndice
+  (lambda (elemento indice)
+    (define actuador(lambda (elemento indice)
+      (if (zero? indice)
+          ;True Case
+          (get-primero elemento)
+          ;Else
+          (actuador (get-resto elemento) (- indice 1)))))
+    (if (< indice (longitud elemento))
+    ;True Case
+    (actuador elemento indice)
+    ;Else
+    "Indice Fuera de rango")))
 
 ;Función la cual crea en ese instante una lista con losdatos de la fecha de ese instante
 (define get-lista-tiempo
@@ -29,23 +57,6 @@
                    (~v (selectorIndice listaTiempo 4))"/"
                    (~v (selectorIndice listaTiempo 5))"\n")))
 ;(display(tiempo->string lista))
-
-
-;FUNCION : calcular longitud o length , su implmentación es solo para saber como funcionaba 
-;Dominio: lista x lista
-;Recorrido : Entero x Entero
-;Recursion Natural  , ya que deja espacios pendientes
-(define longitud
-   (lambda (lista)
-     ;Pregunto si acaso el elemento entregado acaso es una lista
-     (if (list? lista)
-         ;Y la recorro recurisvamente
-         ( cond
-            ;Hasta que llege a ser nulo
-            [( null? lista) 0]
-            ;Si no es nulo añado uno más a la cuenta del longitud y sigo buscando el ultimo elemento (null) de la lista
-            [ else (+ 1 (longitud (cdr lista) ) ) ] )
-         #f) ) )
 
 ;Función que cambia elemento dentro de una lista
 ;DOMINIO : LISTA x ENTERO x ELEMENTO
