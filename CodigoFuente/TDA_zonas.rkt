@@ -30,9 +30,8 @@
 (define zonas
   (list
    ;WORKSPACE ref 0 , car , first
-   ;Representación: tiene una lista con los archivos
-   ;representados con una lista de listas donde el primer elemento de cada lsita
-   ;es el nombre y el resto sus lineas de código
+   ;Representación:  lista de listas donde el primer elemento de cada lista es el nombre de archivo
+   ;y el resto su contenido . Cada linea tiene un salto de linea excepto el nombre de archivo
    ;BEGIN of WORKSPACE---------------------------------------------------------------------------------------
    (list
     (list "main.c"
@@ -45,36 +44,26 @@
           "//funcion que realiza una busqueda\n")
     )
    ;END of WORKSPACE ---------------------------------------------------------------------------------------------
-   
-   ;BEGIN of INDEX -----------------------------------------------------------------------------------------------
-   
-   (list
-    ;La lista index contiene en primer lugar todos los archivos dados de una carpeta
-    ;La primera lista es una copia del workspace actual , con las respectivos cambios hechos en los archivos
 
-    ;COPIA DE WORKSPACE ACTUAL---------------------------------------------------------------------------------
+   ;La lista index contiene como primer paramtro una copia del workspace actual y como segundo parametro una lista
+   ;Con cada cambio de los archivos con respecto al ultimo commit
+   
+   ;BEGIN of index-----------------------------------------------------------------------------------------------
+   (list
+    ;COPIA DE WORKSPACE ACTUAL
     (list
      (list
-      "nombre de archivo\n"
+      "BEE.c"
       "linea1\n")
      )
-     ;---------------------------------------------------------------------------------------------------------
-
-     ;DELTA CAMBIOS----------------------------------------------------------------------------------------------
-    ;DELTA CAMBIOS QUE SE COMPARAN
-    ;Lista que contiene los archivos que han sido cambiados
-    ;FILES CHANGED , con codigos para saber que fue lo que se hizo en cada archivo
+    ;DeltaCambios : lista que contiene los archivos que han sido cambiados
     ;El largo de esta lista indica cuantos archivos fueron cambiados
     (list
-     (list "nombre de archivo" 1 0 (list "archivo.c" "nombre archivo") #f #t ))
-      
-      ;DELTA CAMBIOS----------------------------------------------------------------------------------------------
-      
-     )
-   ;END of INDEX -----------------------------------------------------------------------------------------------
+     ;Estas listas contienen listas con codigos para saber que fue lo que se hizo en cada archivo
+     (list "nombre de archivo" 1 0 (list "archivo.c" "BEE.c") #f #t )))
+   ;END of index -----------------------------------------------------------------------------------------------
 
-   ;BEGIN of LOCAL-REPOSITORY--------------------------------------------------------------------------------------
-   
+   ;BEGIN of local-repository--------------------------------------------------------------------------------------
    (list
     ;El list-ref numero 0 muestra el commit mas reciente
     (list "primer commit" ;nombre del commit
@@ -82,19 +71,15 @@
           ;Copia del worpksace ;Workspace en ese momento
           (list)
           ;Delta cambios ;Cambios realizados
-          )
-    )
-
-   ;END of INDEX -----------------------------------------------------------------------------------------------
+          (list)))
+   ;END of local-repository -----------------------------------------------------------------------------------------------
 
    ;BEGINof REMOTE-REPOSITORY ---------------------------------------------------------------------------------
    
    (list)
    
    ;END of REMOTE-REPOSITORY ----------------------------------------------------------------------------------
-   
-   )
-  )
+   ))
 
 ;SELECTORES zonas
 
@@ -139,6 +124,7 @@
           )
            ;FALSE CASE
            "Entrada incorrecta\n")))
+
 ;sinonimos de funciones de indice
 (define (get-workspace zonas)
     (get-zona "workspace" zonas))
@@ -162,12 +148,11 @@
    (list? (selectorIndice funcion 2))
    (list? (selectorIndice funcion 3))))
 
-
-
 ;SELECTOR BUSCAR ARCHIVO en un workspace
 ;Dominio : Workspace x String
 ;Recorrido : Integer
 ;Recursión de cola
+
 ;Funcion Envoltorio
 (define buscar-archivo
       (lambda (workspace archivo-buscado)
@@ -185,7 +170,8 @@
         (buscador workspace (get-primero workspace) (longitud workspace) 0 archivo-buscado)))
 ;Ejemplo de uso : (buscar-archivo (get-workspace zonas) "busqueda.h")
 
-;Funcion accionar buscador
+;Funciones constructoras
+;Función constructora delta cambios según el último commit realizado
 ;---------------------------------------------------------------------------------------------------------------------------
 
 ;MODULO zonas->string
@@ -194,8 +180,8 @@
 ;Dominio : workspace
 ;Recorrido : String x String
 ;Tipo de Recursión: recursión de cola
-(define string-workspace
-  (lambda (funcion)
+(define string->workspace
+  (lambda (workspace)
     (define recorrer-workspace
       (lambda (workspace archivo n i stringSalida)
         ;Casos borde
@@ -219,60 +205,79 @@
               [ else
                 ;Ahora hago recursión con lo que queda de la lista
                 (recorrer-workspace workspace (get-resto archivo) n i (string-append stringSalida (get-primero archivo)))])))
-    ;pregunto si corresponde a una zona
-    (if (zonas? funcion)
         ;Pregunto acaso si se encuentra vacío o no , en caso de estarlo devuelvo workspace vacío
-        (if (string? (get-zona "workspace" funcion) )
+    (recorrer-workspace workspace
+                        (get-resto (get-primero workspace))
+                        (longitud workspace)
+                        0 ; Indice
+                        (string-append "WORKSPACE : \n\nArchivo número 1: "
+                                       (get-primero (get-primero workspace))"\n"))))
+
+(define verificar-string-workspace
+  (lambda (zonas)
+    (if (string? (get-zona "workspace" zonas) )
             ;True case:
-            (get-zona "workspace" funcion)
-            (recorrer-workspace (get-zona "workspace" funcion)
-                                (get-resto (get-primero (get-zona "workspace" funcion)))
-                                (longitud (get-zona "workspace" funcion))
-                                0 ; Indice
-                                (string-append "WORKSPACE : \n\nArchivo número 1: "
-                                               (car (car (get-zona "workspace" funcion)))"\n")))
-        "No corresponde a una zona el paramtero entregado")))
+            (string-append (get-zona "workspace" zonas) "\n")
+            (string->workspace (get-zona "workspace" zonas)))))
 
 ;Funcion que traspasa el local-repository a string mostrando solo los nombres de los commit y su fecha de modificación
 ;Como git log
-;Dominio : Zonas
+;Dominio : local-repository | remote-repository X mensaje , el mensaje es si es un local o un remote
 ;Recorrido : String x String
-(define string-local-repository
-  (lambda (zonas)
-    (define recorrer-local-repository
-      (lambda (local-repository stringSalida)
+(define repository->string
+  (lambda (repository mensaje)
+    (define recorrer-repository
+      (lambda (repository stringSalida)
         ;Pregunto acaso si mi puedo seguir recorriendo mi local repository
-        (if (null? local-repository)
+        (if (null? repository)
             stringSalida
             ;En caso de que aún no nos encontremos al final del local-repository
-            (recorrer-local-repository
-             (get-resto local-repository)
+            (recorrer-repository
+             (get-resto repository)
              ;StringSalida
              (string-append
               stringSalida
-              "Commit: "
-              (get-primero (get-primero local-repository)) "\n"
-              (tiempo->string (get-primero(get-resto (get-primero local-repository))))"\n")))))
+              "Nombre del Commit: "
+              (get-primero (get-primero repository)) "\n"
+              (tiempo->string (get-primero(get-resto (get-primero repository))))
+              "\n\n")))))
+        (recorrer-repository repository mensaje)))
+
+(define verificar-local-repository-string
+  (lambda (zonas)
     (if (string? (get-local-repository zonas))
         ;Si es sting get-local-repository significa que esta vacío
-        (get-local-repository)
+        (string-append (get-local-repository zonas)"\n\n")
         ;Si no lo es
-        (recorrer-local-repository
-         (get-local-repository zonas)
-         "\nLocal-repository:\n\n")
-        )))
+        (repository->string (get-local-repository zonas) "\nLocal-repository:\n\n"))))
+
+(define verificar-remote-repository-string
+  (lambda (zonas)
+    (if (string? (get-remote-repository zonas))
+        ;Si es sting get-local-repository significa que esta vacío
+        (string-append (get-remote-repository zonas)"\n\n")
+        ;Si no lo es
+        (repository->string (get-remote-repository zonas) "\nRemote-repository:\n\n"))))
+
 ;Funcion que traspasa el index a string mostrando solo los nombres de los commit y su fecha de modificación
-;Como git log
-;Dominio : Zonas
+;Dominio : index
 ;Recorrido : String x String
 
+;MAIN  zonas->string
 ;ZONAS TO STRING
 ;DEVUELVE TODAS LAZ ZONAS EN FORMA DE STRING
 ;Dominio : Zonas
 ;Salida :String x String
 (define zonas->string
   (lambda (zonas)
-    (string-append (string-workspace zonas) (string-local-repository zonas))))
+    (if (zonas? zonas)
+    (string-append (verificar-string-workspace zonas)
+                   (verificar-local-repository-string zonas)
+                   (verificar-remote-repository-string zonas))
+    "No es una zona el parametro entregado")))
+
+;Ejemplo correcto de uso :
+(display (zonas->string zonas))
 ;------------------------------------------------------------------------------------------------------
 ;(provide reconstruir-lista)
 ;(buscar "busqueda.c" (car zonas))
