@@ -76,18 +76,15 @@
 (define (pull)
   (lambda (funcion)
     (if (zonas? funcion)
-        ;true case , pregunto si acaso la lista se encuentra vacía 
-        (if(empty?((zonas)1) )
-           ;en caso de estarlo digo que el remote repository esta vacío
-           
+        ;true case , pregunto si acaso el remote repository se encuentra vacío 
+        (if (not(list? (get-remote-repository  zonas)))
+           ;en caso de estarlo digo que el remote repository esta vacío          
            "El remote repository se encuentra vacío"
-            
            ;else , de caso contrario
-           ;RETORNO UNA LISTA CON TODOS LOS COMMITS A TRAVES DE UNA RECURSIÓN NATURAL
-           ;cada commit en una lista y lo paso al local repository
+           ;RETORNO UNA LISTA CON TODOS LOS COMMITS A local-repository
           "movemeros sus cosas al local repository")
         ;else
-        (null))
+        #f)
     )
   )
 
