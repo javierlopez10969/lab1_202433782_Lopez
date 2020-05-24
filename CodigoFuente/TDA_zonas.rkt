@@ -41,8 +41,7 @@
           )
     (list "busqueda.h"
           "\n#include <stdio.h>\n"
-          "//funcion que realiza una busqueda\n")
-    )
+          "//funcion que realiza una busqueda\n"))
    ;END of WORKSPACE ---------------------------------------------------------------------------------------------
 
    ;La lista index contiene como primer paramtro una copia del workspace actual y como segundo parametro una lista
@@ -54,8 +53,7 @@
     (list
      (list
       "BEE.c"
-      "linea1\n")
-     )
+      "linea1\n"))
     ;DeltaCambios : lista que contiene los archivos que han sido cambiados
     ;El largo de esta lista indica cuantos archivos fueron cambiados
     (list
@@ -135,24 +133,11 @@
 (define (get-remote-repository zonas)
     (get-zona "remote-repository" zonas))
 
-;FUNCIONES DE PERETENECIA
-;Función zona? : verifica si acaso el parametro entregado pertenece a un elemento zona
-;Dominio : Cualquier clase de elemento
-;Recorrido : boolean
-(define (zonas? funcion)
-  (and
-   (list? funcion)
-   (= 4 (longitud funcion))
-   (list? (selectorIndice funcion 0))
-   (list? (selectorIndice funcion 1))
-   (list? (selectorIndice funcion 2))
-   (list? (selectorIndice funcion 3))))
 
 ;SELECTOR BUSCAR ARCHIVO en un workspace
 ;Dominio : Workspace x String
 ;Recorrido : Integer
 ;Recursión de cola
-
 ;Funcion Envoltorio
 (define buscar-archivo
       (lambda (workspace archivo-buscado)
@@ -170,8 +155,117 @@
         (buscador workspace (get-primero workspace) (longitud workspace) 0 archivo-buscado)))
 ;Ejemplo de uso : (buscar-archivo (get-workspace zonas) "busqueda.h")
 
-;Funciones constructoras
-;Función constructora delta cambios según el último commit realizado
+;Función Seleccionadora del workspace de un commit , list-ref 1
+;Dominio: Commit
+;Recorrido: Workspace
+(define get-workspace-of-commit
+  (lambda (commit)
+    (selectorIndice commit 2)))
+;Función seleccionadora del ultimo commit del local-repository
+;Dominio zonas
+;Recorrido : workspace
+(define get-last-workspace
+  (lambda (zonas)
+    (get-workspace-of-commit(get-primero(get-local-repository zonas)))))
+;Ejemplo de uso :(get-last-workspace zonas)
+
+
+;FUNCIONES DE PERETENECIA
+;Función zona? : verifica si acaso el parametro entregado pertenece a un elemento zona
+;Dominio : Cualquier clase de elemento
+;Recorrido : boolean
+(define (zonas? funcion)
+  (and
+   (list? funcion)
+   (= 4 (longitud funcion))
+   (list? (selectorIndice funcion 0))
+   (list? (selectorIndice funcion 1))
+   (list? (selectorIndice funcion 2))
+   (list? (selectorIndice funcion 3))))
+
+;Funciones constructoras----------------------------------------------------------------------------------------------------
+
+
+;Función que genera una lista con TODOS los nombres de archivos dentro de un workspace
+;Dominio : Workspace ; Recorrido : lista
+;Recursión : Natural
+(define get-namesN
+      (lambda (workspace)
+        (if (null? workspace)
+            null
+            (cons
+             ;Recursión natural
+             (get-primero(get-primero workspace))
+             (get-namesN (get-resto workspace))))))
+;(get-namesN (get-workspace zonas))
+;Recursión : De cola , pero añadir elemento es natural
+(define get-namesC
+  (lambda(workspace)
+    (define get-lista-salida
+      (lambda (workspace listaSalida)
+        (if (null? workspace)
+            listaSalida
+            (get-lista-salida (get-resto workspace) (añadir-elemento listaSalida (get-primero(get-primero workspace)))))))
+    (get-lista-salida workspace null)))
+;(get-names (get-workspace zonas))
+
+
+;Función constructora delta cambios según el último commit realizado dentro del local repository
+
+;Funcion que genera cambios de una archivo con respecto al ultimo commit
+;Entrada : archivo , workspace de el ultimo commit
+;Dominio : archivo x workspace
+;Recorrido: delta-cambios
+(define generar-cambios-dos-archivos
+  (lambda (archivo1 workspace)
+    ;veo si acaso existe el mismo nombre dentro del commit o un partial match
+    "kk"))
+
+;se añaden todos los archivos en que se registran cambios locales
+;Función que añade todos los archivos al index 
+;Dominio : Lista de Archivos X zonas
+;Recorrido = Zonas
+(define generar-index
+  (lambda (lista zonas)
+    (cambiar-elemento zonas 1 )))
+
+;Funcion que busca las coincidencias de en los archivos del workspace dentro del commit mas reciente
+;dominio = lista de nombres de archivos X zonas
+;Recorrido = zonas
+;Funcion que busca archivo por archivo los cambios realizados
+(define delta-cambios
+  (lambda (lista zonas)
+    ;En primer lugar nos aseguramos que los nombres otorgados si se encuentran dentro del workspace
+    (if (null? lista)
+        ;Si ya me encuentro al final de la lista signfica que si se encontraron todos los archivos dentro del workspace
+        ;cambio el index por uno nuevo
+        (generar-index lista zonas)
+        ;pregunto si se encuentra dentro del workspace
+        (if (>= (buscar-archivo (get-workspace zonas) (get-primero lista)) 0)
+            ;True Case
+            (delta-cambios (get-resto lista) zonas)
+            ;Sino se encuentran dentro del workspace
+            "Fatal error , los archivos entregados no existen en el workspace"))))
+
+;Creador de commit
+(define crear-commit
+  (lambda (zonas comentario)
+    (list comentario (get-lista-tiempo) (get-primero(get-index zonas)) (get-primero(get-resto(get-index zonas))))))
+;Nueva-zona-commit
+(define nuevo-commit-local
+  (lambda (zonas comentario)
+    
+    (cambiar-elemento 
+     ;Creo una nueva zona con el local-repository con un nuevo commit
+     (cambiar-elemento zonas 2
+    ;añado al inicio el nuevo commit en el local-repository
+    (añadir-al-inicio (get-local-repository zonas) (crear-commit zonas comentario)))
+    ;Creo una nueva zona con un index en limpio indice 1 , index . nuevo index
+    1 (list))))
+
+
+;Pull arrastra todo el contenido en el ultimo commit de remote-repository y lo actualiza en el workspace y combina commits
+;con el local-repository
 ;---------------------------------------------------------------------------------------------------------------------------
 
 ;MODULO zonas->string
@@ -277,7 +371,7 @@
     "No es una zona el parametro entregado")))
 
 ;Ejemplo correcto de uso :
-(display (zonas->string zonas))
+;(display (zonas->string zonas))
 ;------------------------------------------------------------------------------------------------------
 ;(provide reconstruir-lista)
 ;(buscar "busqueda.c" (car zonas))
@@ -291,7 +385,15 @@
 (provide get-local-repository)
 (provide get-remote-repository)
 (provide selectorIndice)
+(provide buscar-archivo)
 ;pertenencia
 (provide zonas?)
+;constructores
+(provide get-namesN)
+;add
+(provide generar-index)
+(provide delta-cambios)
+;commit
+(provide nuevo-commit-local)
 ;zonas->string
 (provide zonas->string)

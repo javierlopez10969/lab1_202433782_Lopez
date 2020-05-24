@@ -64,27 +64,51 @@
 ;RECURSIÓN : NATURAL
 (define cambiar-elemento
   (lambda (lista posicion nuevo-elemento)
-  ;Pregunto si la lista es nula 
-       ;pregunto si ya llege a mi posición deseada
-       ;en caso de serlo devuelvo el elemento
-       (if (zero? posicion) nuevo-elemento (car lista))
-       ;En caso contr
-  (if (null? lista)
-      ;Caso base , cuando ya termine de de recorrer toda la lista
-      lista
-      ;Else recursivo
-      ;CREO UNA NUEVA LISTA reconstruyendola toda
-      (cons
-       ;pregunto si ya llege a mi posición deseada
-       ;en caso de serlo devuelvo el elemento
-       (if (zero? posicion) nuevo-elemento (car lista))
-       ;En caso contrario sigo recorriendo la lista recursivamente 
-     (cambiar-elemento (cdr lista) (- posicion 1) nuevo-elemento) ) ) ) )
+    ;Pregunto si la lista es nula 
+    ;pregunto si ya llege a mi posición deseada
+    ;en caso de serlo devuelvo el elemento
+    ;En caso contr
+    (if (null? lista)
+        ;Caso base , cuando ya termine de de recorrer toda la lista
+        lista
+        ;Else recursivo
+        ;CREO UNA NUEVA LISTA reconstruyendola toda
+        (cons
+         ;pregunto si ya llege a mi posición deseada
+         ;en caso de serlo devuelvo el elemento
+         (if (= 0 posicion) nuevo-elemento (get-primero lista))
+         ;En caso contrario sigo recorriendo la lista recursivamente 
+         (cambiar-elemento (get-resto lista) (- posicion 1) nuevo-elemento)))))
 
+;Función que añade una nuevo elemento a una lista
+;DOMINIO : lista X nuevo-elemento
+;RECORRIDO : lista
+;RECURSIÓN : NATURAL
+(define añadir-elemento
+  (lambda (lista nuevo-elemento)
+    ;Pregunto si la lista es nula 
+    (if (null? lista)
+        ;en caso de serlo devuelvo el elemento
+        (cons nuevo-elemento null)
+        ;Else recursivo
+        ;CREO UNA NUEVA LISTA reconstruyendola toda
+        (cons
+         ;El primer elemento de la imagen
+         (get-primero lista)
+         ;En caso contrario sigo recorriendo la lista recursivamente 
+         (añadir-elemento (get-resto lista) nuevo-elemento)))))
+
+(define añadir-al-inicio
+  (lambda (lista nuevo-elemento)
+    (reverse(añadir-elemento (reverse lista) nuevo-elemento))))
 
 (provide selectorIndice)
 (provide get-primero)
 (provide get-resto)
+;Modificadores
+(provide cambiar-elemento)
+(provide añadir-al-inicio)
+(provide añadir-elemento)
 (provide tiempo->string)
 (provide get-lista-tiempo)
 (provide longitud)
