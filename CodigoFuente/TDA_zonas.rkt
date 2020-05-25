@@ -83,7 +83,7 @@
 
 ;GET-ZONA , obtengo una zona especifica requerida segun el momento
 ;DOMINIO : STRING X ZONAS
-;RECORRIDO :ZONAS|| STRING
+;RECORRIDO :ZONA || STRING
 (define get-zona
   (lambda (string-zona zonas)
     ;Primero de aseguro que las entrada sea un string
@@ -122,7 +122,6 @@
           )
            ;FALSE CASE
            "Entrada incorrecta\n")))
-
 ;sinonimos de funciones de indice
 (define (get-workspace zonas)
     (get-zona "workspace" zonas))
@@ -162,28 +161,34 @@
   (lambda (commit)
     (define selector
       (lambda(commit listaSalida)
+        ;Devuelvo una lista con el nombre y la fecha del commit entregado
         (añadir-elemento (añadir-elemento listaSalida
                          (selectorIndice commit 0)) (selectorIndice commit 1))))
     (selector commit null)))
+
 ;Función está en cierta zonas , función que revisa si un commit esta en cierta zona
 ;Dominio  : commit x zona
 ;Recorrido : boolean
 (define esta?
   (lambda (commit zona)
+    ;Si llego al final de la zona devuelvo falso , porque no ha sido encontrado
     (if (null? zona)
         #f
+        ;Pregunto si los commits son iguales
         (if (equal? commit (get-primero zona))
             #t
-        (esta? commit (get-resto zona))))))
+           ;sino sigo buscando
+            (esta? commit (get-resto zona))))))
 
 ;(esta? (get-primero(selectorIndice zonas 2)) (selectorIndice zonas 2))
 ;(esta? (get-primero(selectorIndice zonas 2)) (selectorIndice zonas 3))
 
+;PUSH
 ;Otra función que compara los commits dentro de un local con respecto a los del remote
 ;Dominio : local-repository y remote-repository
 ;Salida : Una lista con un entero que indica si las diferencias están en el local o en el remote , 1 local , 2 remote
 ;Recorrido  : entero x commit x commit
-(define comparar-commit
+(define commit->remote
   (lambda (local remote zonas)
     ;Función que devuelve una lista con todos los commits que no se encuentren en la otra zona
     (define salida (lambda (zona1 zona2 listaSalida)
@@ -195,7 +200,6 @@
                             (salida (get-resto zona1) zona2  listaSalida)
                             ;en caso de que no se encuentre añado ese commit a la lista de Salida
                             (salida (get-resto zona1) zona2 (añadir-elemento listaSalida (get-primero zona1)))))))
-    ;1 veo cual es mayor
     (cond
       ;En caso de que las longitudes de local y remote sean iguales
      [(= (longitud local) (longitud remote))
@@ -313,8 +317,7 @@
 
 ;Nueva-zona-commit
 (define nuevo-commit-local
-  (lambda (zonas comentario)
-    
+  (lambda (zonas comentario)    
     (cambiar-elemento 
      ;Creo una nueva zona con el local-repository con un nuevo commit
      (cambiar-elemento zonas 2
@@ -326,6 +329,8 @@
 
 ;Pull arrastra todo el contenido en el ultimo commit de remote-repository y lo actualiza en el workspace y combina commits
 ;con el local-repository
+
+
 ;---------------------------------------------------------------------------------------------------------------------------
 
 ;MODULO zonas->string
@@ -375,7 +380,6 @@
             (string->workspace (get-zona "workspace" zonas)))))
 
 ;Funcion que traspasa el local-repository a string mostrando solo los nombres de los commit y su fecha de modificación
-;Como git log
 ;Dominio : local-repository | remote-repository X mensaje , el mensaje es si es un local o un remote
 ;Recorrido : String x String
 (define repository->string
@@ -396,6 +400,38 @@
               (tiempo->string (get-primero(get-resto (get-primero repository))))
               "\n\n")))))
         (recorrer-repository repository mensaje)))
+
+;git log , muestra los ultimos 5 commits realizados
+;Dominio : reositorio x string-previo
+;Recorrido : String
+;Recursión : De cola
+(define repository->stringLog
+  (lambda (repository mensaje)
+    (define recorrer-repository
+      (lambda (repository stringSalida indice)
+        ;Pregunto acaso si mi puedo seguir recorriendo mi local repository
+        (if (or (null? repository) (= 5 indice))
+            stringSalida
+            ;En caso de que aún no nos encontremos al final del local-repository
+            (recorrer-repository
+             (get-resto repository)
+             ;StringSalida
+             (string-append
+              stringSalida
+              "Nombre del Commit: "
+              (get-primero (get-primero repository)) "\n"
+              (tiempo->string (get-primero(get-resto (get-primero repository))))
+              "\n\n")))))
+        (recorrer-repository repository mensaje 0)))
+
+(define verificar-log
+  (lambda (zonas)
+    (if (string? (get-local-repository zonas))
+        ;Si es sting get-local-repository significa que esta vacío
+        (string-append (get-local-repository zonas)"\n\n")
+        ;Si no lo es
+        (repository->stringLog (get-local-repository zonas) "\nLos Ultimos commits realizados fueron : \n\n"))))
+
 
 (define verificar-local-repository-string
   (lambda (zonas)
@@ -426,15 +462,17 @@
       (lambda (deltas deletions)
         (if (null? deltas)
             deletions
-            (contar-deletions (get-resto deltas) (+ deletions (selectorIndice (get-primero deltas) 2)) ))))
-    (string-append stringSalida "\n Insertions : " (~v (contar-insertions deltas 0) ) "\n"
-                   "Deletions : " (~v (contar-deletions deltas 0) ) "\n")))
+            (contar-deletions (get-resto deltas) (+ deletions (selectorIndice (get-primero deltas) 2))))))
+    (string-append stringSalida
+                   (~v (longitud deltas) ) " archivos cambiados , "
+                   "Insertions : " (~v (contar-insertions deltas 0) ) " ,"
+                   "Deletions : " (~v (contar-deletions deltas 0) ) " .\n")))
 
 ;delete , create 
 (define index->string
   (lambda (index)
     (translate-delta (get-primero(get-resto index))
-    (string-append "INDEX : \nWorkspace actual de index : \n\n" (string->workspace (get-primero(get-index zonas))) ))))
+    (string-append "INDEX : \nWorkspace actual de index :" (string->workspace (get-primero(get-index zonas))) "\n" ))))
 
 ;Funcion que traspasa el index a string mostrando el workspace guardado en ese index + los delta cambios
 ;Dominio : index
@@ -485,7 +523,7 @@
 ;constructores
 (provide get-namesN)
 ;pull
-(provide comparar-commit)
+(provide commit->remote)
 ;add
 (provide generar-index)
 (provide delta-cambios)
@@ -493,3 +531,5 @@
 (provide nuevo-commit-local)
 ;zonas->string
 (provide zonas->string)
+;log
+(provide verificar-log)
