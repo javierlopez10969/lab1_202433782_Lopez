@@ -155,7 +155,66 @@
         (buscador workspace (get-primero workspace) (longitud workspace) 0 archivo-buscado)))
 ;Ejemplo de uso : (buscar-archivo (get-workspace zonas) "busqueda.h")
 
-;Función Seleccionadora del workspace de un commit , list-ref 1
+;selector de nombre y fecha de un commit
+;Dominio : commit
+;salida : nombre x fecha
+(define selector-nombre-fecha
+  (lambda (commit)
+    (define selector
+      (lambda(commit listaSalida)
+        (añadir-elemento (añadir-elemento listaSalida
+                         (selectorIndice commit 0)) (selectorIndice commit 1))))
+    (selector commit null)))
+;Función está en cierta zonas , función que revisa si un commit esta en cierta zona
+;Dominio  : commit x zona
+;Recorrido : boolean
+(define esta?
+  (lambda (commit zona)
+    (if (null? zona)
+        #f
+        (if (equal? commit (get-primero zona))
+            #t
+        (esta? commit (get-resto zona))))))
+
+;(esta? (get-primero(selectorIndice zonas 2)) (selectorIndice zonas 2))
+;(esta? (get-primero(selectorIndice zonas 2)) (selectorIndice zonas 3))
+
+;Otra función que compara los commits dentro de un local con respecto a los del remote
+;Dominio : local-repository y remote-repository
+;Salida : Una lista con un entero que indica si las diferencias están en el local o en el remote , 1 local , 2 remote
+;Recorrido  : entero x commit x commit
+(define comparar-commit
+  (lambda (local remote zonas)
+    ;Función que devuelve una lista con todos los commits que no se encuentren en la otra zona
+    (define salida (lambda (zona1 zona2 listaSalida)
+                    (if (null? zona1)
+                        listaSalida
+                        ;Pregunto si acaso mi commit se encuentra en la segunda zona
+                        (if (esta? (get-primero zona1) zona2)
+                            ;en caso que se encuentre no añado nada a la lista de salida
+                            (salida (get-resto zona1) zona2  listaSalida)
+                            ;en caso de que no se encuentre añado ese commit a la lista de Salida
+                            (salida (get-resto zona1) zona2 (añadir-elemento listaSalida (get-primero zona1)))))))
+    ;1 veo cual es mayor
+    (cond
+      ;En caso de que las longitudes de local y remote sean iguales
+     [(= (longitud local) (longitud remote))
+      (cond
+        ;Pregunto si hay commit del local en el remote , si no hay ninguno se hace el push
+        [(null? (salida local remote null)) "push"]
+        ;si hay la misma cantidad que la longitud del local signfica que está actualizado el local
+        [(= (longitud (salida local remote null)) (longitud local)) "El local repository se encuentra actualizado"]
+        ;si hay por lo menos uno
+        [(not (null? (salida local remote null))) ])]
+     ;ahora en caso de que la longitud de local sea mayor a la de 
+     [(> (longitud local) (longitud remote))
+      (cambiar-elemento zonas 3 (añadir-al-inicio (selectorIndice zonas 3) (get-primero(salida local remote null))))]
+     [(< (longitud local) (longitud remote))])))
+
+
+
+
+;Función Seleccionadora del workspace de un commit , list-ref 2
 ;Dominio: Commit
 ;Recorrido: Workspace
 (define get-workspace-of-commit
@@ -251,6 +310,7 @@
 (define crear-commit
   (lambda (zonas comentario)
     (list comentario (get-lista-tiempo) (get-primero(get-index zonas)) (get-primero(get-resto(get-index zonas))))))
+
 ;Nueva-zona-commit
 (define nuevo-commit-local
   (lambda (zonas comentario)
@@ -352,10 +412,39 @@
         (string-append (get-remote-repository zonas)"\n\n")
         ;Si no lo es
         (repository->string (get-remote-repository zonas) "\nRemote-repository:\n\n"))))
+;Función que traduce los cambios ocurridos 
+;Dominio : delta-cambios x stringSalida
+;Recorrido: String
+(define translate-delta
+  (lambda (deltas stringSalida)
+    (define contar-insertions
+      (lambda (deltas insertions)
+        (if (null? deltas)
+            insertions
+            (contar-insertions (get-resto deltas) (+ insertions (selectorIndice (get-primero deltas) 1)) ))))
+    (define contar-deletions
+      (lambda (deltas deletions)
+        (if (null? deltas)
+            deletions
+            (contar-deletions (get-resto deltas) (+ deletions (selectorIndice (get-primero deltas) 2)) ))))
+    (string-append stringSalida "\n Insertions : " (~v (contar-insertions deltas 0) ) "\n"
+                   "Deletions : " (~v (contar-deletions deltas 0) ) "\n")))
 
-;Funcion que traspasa el index a string mostrando solo los nombres de los commit y su fecha de modificación
+;delete , create 
+(define index->string
+  (lambda (index)
+    (translate-delta (get-primero(get-resto index))
+    (string-append "INDEX : \nWorkspace actual de index : \n\n" (string->workspace (get-primero(get-index zonas))) ))))
+
+;Funcion que traspasa el index a string mostrando el workspace guardado en ese index + los delta cambios
 ;Dominio : index
 ;Recorrido : String x String
+(define verificar-index-string
+  (lambda (zonas)
+    (if (string? (get-index zonas))
+        ;Si es sting get-index significa que esta vacío
+        (string-append (get-index zonas)"\n\n")
+        (index->string (get-index zonas) ))))
 
 ;MAIN  zonas->string
 ;ZONAS TO STRING
@@ -366,12 +455,15 @@
   (lambda (zonas)
     (if (zonas? zonas)
     (string-append (verificar-string-workspace zonas)
+                   (verificar-index-string zonas)
                    (verificar-local-repository-string zonas)
                    (verificar-remote-repository-string zonas))
     "No es una zona el parametro entregado")))
 
 ;Ejemplo correcto de uso :
 ;(display (zonas->string zonas))
+;push
+;(display(zonas->string(comparar-commit (selectorIndice zonas 2) (selectorIndice zonas 3) zonas)))
 ;------------------------------------------------------------------------------------------------------
 ;(provide reconstruir-lista)
 ;(buscar "busqueda.c" (car zonas))
@@ -386,10 +478,14 @@
 (provide get-remote-repository)
 (provide selectorIndice)
 (provide buscar-archivo)
+;Pull
+(provide selector-nombre-fecha)
 ;pertenencia
 (provide zonas?)
 ;constructores
 (provide get-namesN)
+;pull
+(provide comparar-commit)
 ;add
 (provide generar-index)
 (provide delta-cambios)
