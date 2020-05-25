@@ -166,7 +166,21 @@
                          (selectorIndice commit 0)) (selectorIndice commit 1))))
     (selector commit null)))
 
-;Función está en cierta zonas , función que revisa si un commit esta en cierta zona
+;Función Seleccionadora del workspace de un commit , list-ref 2
+;Dominio: Commit
+;Recorrido: Workspace
+(define get-workspace-of-commit
+  (lambda (commit)
+    (selectorIndice commit 2)))
+;Función seleccionadora del ultimo commit del local-repository
+;Dominio zonas
+;Recorrido : workspace
+(define get-last-workspace
+  (lambda (zonas)
+    (get-workspace-of-commit(get-primero(selectorIndice zonas 2)))))
+;Ejemplo de uso :(get-last-workspace zonas)
+
+;Función que revisa si un commit esta en cierta zona
 ;Dominio  : commit x zona
 ;Recorrido : boolean
 (define esta?
@@ -179,59 +193,68 @@
             #t
            ;sino sigo buscando
             (esta? commit (get-resto zona))))))
-
+;Ejemplos de uso :
 ;(esta? (get-primero(selectorIndice zonas 2)) (selectorIndice zonas 2))
 ;(esta? (get-primero(selectorIndice zonas 2)) (selectorIndice zonas 3))
 
-;PUSH
+;Función que devuelve una lista con todos los commits que no se encuentren en la otra zona
+;Dominio zona1 x zona2 x null
+;Recorrido : commit x commit
+;Recursión : de cola
+(define estan? (lambda (zona1 zona2 listaSalida)
+                 (if (null? zona1)
+                     listaSalida
+                     ;Pregunto si acaso mi commit se encuentra en la segunda zona
+                     (if (esta? (get-primero zona1) zona2)
+                         ;en caso que se encuentre no añado nada a la lista de salida
+                         (estan? (get-resto zona1) zona2  listaSalida)
+                         ;en caso de que no se encuentre añado ese commit a la lista de Salida
+                         (estan? (get-resto zona1) zona2 (añadir-elemento listaSalida (get-primero zona1)))))))
+
+;PUSH-----------------------------------------------------------------------------------------------------------------------
 ;Otra función que compara los commits dentro de un local con respecto a los del remote
 ;Dominio : local-repository y remote-repository
 ;Salida : Una lista con un entero que indica si las diferencias están en el local o en el remote , 1 local , 2 remote
 ;Recorrido  : entero x commit x commit
 (define commit->remote
   (lambda (local remote zonas)
-    ;Función que devuelve una lista con todos los commits que no se encuentren en la otra zona
-    (define salida (lambda (zona1 zona2 listaSalida)
-                    (if (null? zona1)
-                        listaSalida
-                        ;Pregunto si acaso mi commit se encuentra en la segunda zona
-                        (if (esta? (get-primero zona1) zona2)
-                            ;en caso que se encuentre no añado nada a la lista de salida
-                            (salida (get-resto zona1) zona2  listaSalida)
-                            ;en caso de que no se encuentre añado ese commit a la lista de Salida
-                            (salida (get-resto zona1) zona2 (añadir-elemento listaSalida (get-primero zona1)))))))
+    (define actualizar-remote
+      (lambda (commits zonas)
+        (if (null? commits)
+            zonas
+            (actualizar-remote
+             (get-resto commits)
+             (cambiar-elemento zonas 3 (añadir-al-inicio (selectorIndice zonas 3) (get-primero commits)))) )))
     (cond
+      ;estan? los commits del local  en remote
+      [(not (null? (estan? local remote null)))
+       (actualizar-remote (estan? local remote null) zonas )]
       ;En caso de que las longitudes de local y remote sean iguales
-     [(= (longitud local) (longitud remote))
-      (cond
-        ;Pregunto si hay commit del local en el remote , si no hay ninguno se hace el push
-        [(null? (salida local remote null)) "push"]
-        ;si hay la misma cantidad que la longitud del local signfica que está actualizado el local
-        [(= (longitud (salida local remote null)) (longitud local)) "El local repository se encuentra actualizado"]
-        ;si hay por lo menos uno
-        [(not (null? (salida local remote null))) ])]
-     ;ahora en caso de que la longitud de local sea mayor a la de 
-     [(> (longitud local) (longitud remote))
-      (cambiar-elemento zonas 3 (añadir-al-inicio (selectorIndice zonas 3) (get-primero(salida local remote null))))]
-     [(< (longitud local) (longitud remote))])))
+      ;no estan? los commits de local en remote
+      [(null? (estan? local remote null))
+       "El remote repository se encuentra actualizado , no se procederá a hacer push"])))
+;---------------------------------------------------------------------------------------------------------------------------
 
-
-
-
-;Función Seleccionadora del workspace de un commit , list-ref 2
-;Dominio: Commit
-;Recorrido: Workspace
-(define get-workspace-of-commit
-  (lambda (commit)
-    (selectorIndice commit 2)))
-;Función seleccionadora del ultimo commit del local-repository
-;Dominio zonas
-;Recorrido : workspace
-(define get-last-workspace
-  (lambda (zonas)
-    (get-workspace-of-commit(get-primero(get-local-repository zonas)))))
-;Ejemplo de uso :(get-last-workspace zonas)
-
+;PULL--------------------------------------------------------------------------------------------------------------------
+(define commit->local
+  (lambda (local remote zonas)
+    (define actualizar-local
+      (lambda (commits zonas)
+        (if (null? commits)
+            commits
+            (actualizar-local
+             (get-resto commits)
+             (cambiar-elemento zonas 2 (añadir-al-inicio (selectorIndice zonas 3) (get-primero commits)))))))
+    (define actualizar-workspace
+      (lambda (zonas)
+        (cambiar-elemento zonas 0 (get-last-workspace zonas))))
+    (cond
+      [(not (null? (estan? remote local null)))
+       (actualizar-local (estan? remote local null) zonas )]
+      ;En caso de que las longitudes de local y remote sean iguales
+      [(null? (estan? remote local null))
+       "El remote repository se encuentra actualizado , no se procederá a hacer push"])))
+;---------------------------------------------------------------------------------------------------------------------------
 
 ;FUNCIONES DE PERETENECIA
 ;Función zona? : verifica si acaso el parametro entregado pertenece a un elemento zona
@@ -418,10 +441,10 @@
              ;StringSalida
              (string-append
               stringSalida
-              "Nombre del Commit: "
-              (get-primero (get-primero repository)) "\n"
-              (tiempo->string (get-primero(get-resto (get-primero repository))))
-              "\n\n")))))
+              "Date : " (tiempo->string (get-primero(get-resto (get-primero repository))))
+              "\n\n        "
+              (get-primero (get-primero repository)) "\n\n")
+             (+ indice 1)))))
         (recorrer-repository repository mensaje 0)))
 
 (define verificar-log
