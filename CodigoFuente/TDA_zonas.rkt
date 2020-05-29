@@ -58,7 +58,7 @@
     ;El largo de esta lista indica cuantos archivos fueron cambiados
     (list
      ;Estas listas contienen listas con codigos para saber que fue lo que se hizo en cada archivo
-     (list "nombre de archivo" 1 0 (list "archivo.c" "BEE.c") #f #t )))
+     (list "BEE.c" 1 0 (list "BEE.c") #f #t )))
    ;END of index -----------------------------------------------------------------------------------------------
 
    ;BEGIN of local-repository--------------------------------------------------------------------------------------
@@ -96,28 +96,28 @@
                ;true case
                (selectorIndice zonas 0)
                ;else
-               "workspace vacío\n")]
+               "\nworkspace vacío\n")]
           ;get-index
           [(equal? string-zona "index")
            (if (not (null? (selectorIndice zonas 1)))
                ;true case
                (selectorIndice zonas 1)
                ;else
-               "index vacío\n")]
+               "\nindex vacío\n")]
           ;get-local-repositoy
           [(equal? string-zona "local-repository")
            (if (not (null? (selectorIndice zonas 2)))
                ;true case
                (selectorIndice zonas 2)
                ;else
-               "local-repository vacío\n")]
+               "\nlocal-repository vacío\n")]
           ;get-remote-repository
           [(equal? string-zona "remote-repository")
            (if (not (null? (selectorIndice zonas 3)))
                ;true case
                (selectorIndice zonas 3)
                ;else
-               "remote-repository vacío\n")]
+               "\nremote-repository vacío\n")]
           [else "No existe esta zona"]
           )
            ;FALSE CASE
@@ -133,8 +133,8 @@
     (get-zona "remote-repository" zonas))
 
 
-;SELECTOR BUSCAR ARCHIVO en un workspace
-;Dominio : Workspace x String
+;SELECTOR BUSCAR nombre de archivo en un workspace
+;Dominio : Workspace x Nombre de Archivo
 ;Recorrido : Integer
 ;Recursión de cola
 ;Funcion Envoltorio
@@ -203,7 +203,8 @@
 ;Recursión : de cola
 (define estan? (lambda (zona1 zona2 listaSalida)
                  (if (null? zona1)
-                     listaSalida
+                     ;Devuelvo los commits desde el más viejo al más reciente
+                     (reverse listaSalida)
                      ;Pregunto si acaso mi commit se encuentra en la segunda zona
                      (if (esta? (get-primero zona1) zona2)
                          ;en caso que se encuentre no añado nada a la lista de salida
@@ -215,7 +216,9 @@
 ;Otra función que compara los commits dentro de un local con respecto a los del remote
 ;Dominio : local-repository y remote-repository
 ;Salida : Una lista con un entero que indica si las diferencias están en el local o en el remote , 1 local , 2 remote
-;Recorrido  : entero x commit x commit
+;Recorrido  : Zonas | string
+;Recursión : De cola , ya que no queremos hacer un mal uso de memoria , además que cambiar elemento , de por si , ya usa
+;una recursión natural
 (define commit->remote
   (lambda (local remote zonas)
     (define actualizar-remote
@@ -224,36 +227,52 @@
             zonas
             (actualizar-remote
              (get-resto commits)
-             (cambiar-elemento zonas 3 (añadir-al-inicio (selectorIndice zonas 3) (get-primero commits)))) )))
+             ;Añado al incio el commit
+             (cambiar-elemento zonas 3 (añadir-al-inicio (selectorIndice zonas 3) (get-primero commits)))))))
     (cond
       ;estan? los commits del local  en remote
       [(not (null? (estan? local remote null)))
        (actualizar-remote (estan? local remote null) zonas )]
-      ;En caso de que las longitudes de local y remote sean iguales
       ;no estan? los commits de local en remote
       [(null? (estan? local remote null))
        "El remote repository se encuentra actualizado , no se procederá a hacer push"])))
 ;---------------------------------------------------------------------------------------------------------------------------
 
 ;PULL--------------------------------------------------------------------------------------------------------------------
+;Función que mueve los commits del remote repository al local-repository
+;Dominio : local-repository , remote-repository ,zonas
+;Recorrido : Zonas || string
+;Recursión : De cola ,porque asi lo solicita el enunciado
 (define commit->local
   (lambda (local remote zonas)
+    (define actualizar-workspace
+      (lambda (zonas)
+        (cond
+          ;pregunto si mi workspace esta vacío
+          [(not(string? (get-workspace zonas)))
+           ]
+          [(string? (get-workspace zonas))
+           (cambiar-elemento zonas 0 (get-last-workspace zonas))])))
+    ;Función que actualiza local repository junto al con los commits de remote-repository
+    ;Dominio : commits x zonas
+    ;Recorrido : zonas
+    ;Actualizar local de una manera muy básica solo pensando que el local esta vacío
     (define actualizar-local
       (lambda (commits zonas)
         (if (null? commits)
-            commits
+            ;Aquí actualizo el workspace , porque ya agrege todos los commits
+            (actualizar-workspace zonas)
             (actualizar-local
              (get-resto commits)
-             (cambiar-elemento zonas 2 (añadir-al-inicio (selectorIndice zonas 3) (get-primero commits)))))))
-    (define actualizar-workspace
-      (lambda (zonas)
-        (cambiar-elemento zonas 0 (get-last-workspace zonas))))
+             ;Actualizo el local-repository con los commits que no se encuentren en el local
+             (cambiar-elemento zonas 2 (añadir-al-inicio (selectorIndice zonas 2) (get-primero commits)))))))
     (cond
+      ;Acá pregunto si están actualizados los commits del remote en el local-repository
       [(not (null? (estan? remote local null)))
        (actualizar-local (estan? remote local null) zonas )]
-      ;En caso de que las longitudes de local y remote sean iguales
+      ;En caso de que el local se encuentre actualizado , se lo informo al usuario
       [(null? (estan? remote local null))
-       "El remote repository se encuentra actualizado , no se procederá a hacer push"])))
+       "El local repository se encuentra actualizado , no se procederá a hacer push"])))
 ;---------------------------------------------------------------------------------------------------------------------------
 
 ;FUNCIONES DE PERETENECIA
@@ -272,73 +291,18 @@
 ;Funciones constructoras----------------------------------------------------------------------------------------------------
 
 
-;Función que genera una lista con TODOS los nombres de archivos dentro de un workspace
-;Dominio : Workspace ; Recorrido : lista
-;Recursión : Natural
-(define get-namesN
-      (lambda (workspace)
-        (if (null? workspace)
-            null
-            (cons
-             ;Recursión natural
-             (get-primero(get-primero workspace))
-             (get-namesN (get-resto workspace))))))
-;(get-namesN (get-workspace zonas))
-;Recursión : De cola , pero añadir elemento es natural
-(define get-namesC
-  (lambda(workspace)
-    (define get-lista-salida
-      (lambda (workspace listaSalida)
-        (if (null? workspace)
-            listaSalida
-            (get-lista-salida (get-resto workspace) (añadir-elemento listaSalida (get-primero(get-primero workspace)))))))
-    (get-lista-salida workspace null)))
-;(get-names (get-workspace zonas))
-
-
-;Función constructora delta cambios según el último commit realizado dentro del local repository
-
-;Funcion que genera cambios de una archivo con respecto al ultimo commit
-;Entrada : archivo , workspace de el ultimo commit
-;Dominio : archivo x workspace
-;Recorrido: delta-cambios
-(define generar-cambios-dos-archivos
-  (lambda (archivo1 workspace)
-    ;veo si acaso existe el mismo nombre dentro del commit o un partial match
-    "kk"))
-
-;se añaden todos los archivos en que se registran cambios locales
-;Función que añade todos los archivos al index 
-;Dominio : Lista de Archivos X zonas
-;Recorrido = Zonas
-(define generar-index
-  (lambda (lista zonas)
-    (cambiar-elemento zonas 1 )))
-
-;Funcion que busca las coincidencias de en los archivos del workspace dentro del commit mas reciente
-;dominio = lista de nombres de archivos X zonas
-;Recorrido = zonas
-;Funcion que busca archivo por archivo los cambios realizados
-(define delta-cambios
-  (lambda (lista zonas)
-    ;En primer lugar nos aseguramos que los nombres otorgados si se encuentran dentro del workspace
-    (if (null? lista)
-        ;Si ya me encuentro al final de la lista signfica que si se encontraron todos los archivos dentro del workspace
-        ;cambio el index por uno nuevo
-        (generar-index lista zonas)
-        ;pregunto si se encuentra dentro del workspace
-        (if (>= (buscar-archivo (get-workspace zonas) (get-primero lista)) 0)
-            ;True Case
-            (delta-cambios (get-resto lista) zonas)
-            ;Sino se encuentran dentro del workspace
-            "Fatal error , los archivos entregados no existen en el workspace"))))
-
+;Commit------------------------------------------------------------------------------------------------------------------
 ;Creador de commit
+;Dominio : Zonas x Comentario
+;Recorrido:Commit
 (define crear-commit
   (lambda (zonas comentario)
+    ;                                         Guardar Workspace        Guardar cambios
     (list comentario (get-lista-tiempo) (get-primero(get-index zonas)) (get-primero(get-resto(get-index zonas))))))
 
-;Nueva-zona-commit
+;Nueva-zona-commit , función que recibe un comentario para luego el ultimo index efectuado se lleve a un commit
+;Dominio : Zonas X Comentario
+;Recorrido  : Zonas
 (define nuevo-commit-local
   (lambda (zonas comentario)    
     (cambiar-elemento 
@@ -348,183 +312,10 @@
     (añadir-al-inicio (get-local-repository zonas) (crear-commit zonas comentario)))
     ;Creo una nueva zona con un index en limpio indice 1 , index . nuevo index
     1 (list))))
-
-
-;Pull arrastra todo el contenido en el ultimo commit de remote-repository y lo actualiza en el workspace y combina commits
-;con el local-repository
-
-
+;Commit---------------------------------------------------------------------------------------------------------------------
 ;---------------------------------------------------------------------------------------------------------------------------
 
-;MODULO zonas->string
 
-;Funcion que funciona de accionar el traspaso de workspace a string
-;Dominio : workspace
-;Recorrido : String x String
-;Tipo de Recursión: recursión de cola
-(define string->workspace
-  (lambda (workspace)
-    (define recorrer-workspace
-      (lambda (workspace archivo n i stringSalida)
-        ;Casos borde
-        ;Caso de Lista Particular pregunto si acaso queda un único elemento en la lista que estoy analizando
-        (cond [( null? archivo )
-               ;True Case  :
-               ;Devuelve el único elemento de la lista y pregunto si puedo seguir avanzando
-               ;pregunto si el iterador sumado con uno es menor que el largo total
-               (cond [ (< (+ 1 i) n)
-                       ;en caso de serlo retorno el workspace con el iterador sumandole uno
-                       ;y paso a la siguiente lista particular
-                       (recorrer-workspace workspace (get-resto(list-ref workspace (+ 1 i))) n (+ i 1)
-                                           (string-append stringSalida "\nArchivo número "
-                                                          (~v (+ i 2)) ": "
-                                                          (get-primero (list-ref workspace (+ 1 i))) "\n" )) ]
-                     ;Else
-                     [else (string-append stringSalida)])]
-              ;Else :
-              ;en caso de que el largo de la lista particular no se encuentre con un solo elemento
-              ;Obtengo el primer elemento de la lista que estoy viendo
-              [ else
-                ;Ahora hago recursión con lo que queda de la lista
-                (recorrer-workspace workspace (get-resto archivo) n i (string-append stringSalida (get-primero archivo)))])))
-        ;Pregunto acaso si se encuentra vacío o no , en caso de estarlo devuelvo workspace vacío
-    (recorrer-workspace workspace
-                        (get-resto (get-primero workspace))
-                        (longitud workspace)
-                        0 ; Indice
-                        (string-append "WORKSPACE : \n\nArchivo número 1: "
-                                       (get-primero (get-primero workspace))"\n"))))
-
-(define verificar-string-workspace
-  (lambda (zonas)
-    (if (string? (get-zona "workspace" zonas) )
-            ;True case:
-            (string-append (get-zona "workspace" zonas) "\n")
-            (string->workspace (get-zona "workspace" zonas)))))
-
-;Funcion que traspasa el local-repository a string mostrando solo los nombres de los commit y su fecha de modificación
-;Dominio : local-repository | remote-repository X mensaje , el mensaje es si es un local o un remote
-;Recorrido : String x String
-(define repository->string
-  (lambda (repository mensaje)
-    (define recorrer-repository
-      (lambda (repository stringSalida)
-        ;Pregunto acaso si mi puedo seguir recorriendo mi local repository
-        (if (null? repository)
-            stringSalida
-            ;En caso de que aún no nos encontremos al final del local-repository
-            (recorrer-repository
-             (get-resto repository)
-             ;StringSalida
-             (string-append
-              stringSalida
-              "Nombre del Commit: "
-              (get-primero (get-primero repository)) "\n"
-              (tiempo->string (get-primero(get-resto (get-primero repository))))
-              "\n\n")))))
-        (recorrer-repository repository mensaje)))
-
-;git log , muestra los ultimos 5 commits realizados
-;Dominio : reositorio x string-previo
-;Recorrido : String
-;Recursión : De cola
-(define repository->stringLog
-  (lambda (repository mensaje)
-    (define recorrer-repository
-      (lambda (repository stringSalida indice)
-        ;Pregunto acaso si mi puedo seguir recorriendo mi local repository
-        (if (or (null? repository) (= 5 indice))
-            stringSalida
-            ;En caso de que aún no nos encontremos al final del local-repository
-            (recorrer-repository
-             (get-resto repository)
-             ;StringSalida
-             (string-append
-              stringSalida
-              "Date : " (tiempo->string (get-primero(get-resto (get-primero repository))))
-              "\n\n        "
-              (get-primero (get-primero repository)) "\n\n")
-             (+ indice 1)))))
-        (recorrer-repository repository mensaje 0)))
-
-(define verificar-log
-  (lambda (zonas)
-    (if (string? (get-local-repository zonas))
-        ;Si es sting get-local-repository significa que esta vacío
-        (string-append (get-local-repository zonas)"\n\n")
-        ;Si no lo es
-        (repository->stringLog (get-local-repository zonas) "\nLos Ultimos commits realizados fueron : \n\n"))))
-
-
-(define verificar-local-repository-string
-  (lambda (zonas)
-    (if (string? (get-local-repository zonas))
-        ;Si es sting get-local-repository significa que esta vacío
-        (string-append (get-local-repository zonas)"\n\n")
-        ;Si no lo es
-        (repository->string (get-local-repository zonas) "\nLocal-repository:\n\n"))))
-
-(define verificar-remote-repository-string
-  (lambda (zonas)
-    (if (string? (get-remote-repository zonas))
-        ;Si es sting get-local-repository significa que esta vacío
-        (string-append (get-remote-repository zonas)"\n\n")
-        ;Si no lo es
-        (repository->string (get-remote-repository zonas) "\nRemote-repository:\n\n"))))
-;Función que traduce los cambios ocurridos 
-;Dominio : delta-cambios x stringSalida
-;Recorrido: String
-(define translate-delta
-  (lambda (deltas stringSalida)
-    (define contar-insertions
-      (lambda (deltas insertions)
-        (if (null? deltas)
-            insertions
-            (contar-insertions (get-resto deltas) (+ insertions (selectorIndice (get-primero deltas) 1)) ))))
-    (define contar-deletions
-      (lambda (deltas deletions)
-        (if (null? deltas)
-            deletions
-            (contar-deletions (get-resto deltas) (+ deletions (selectorIndice (get-primero deltas) 2))))))
-    (string-append stringSalida
-                   (~v (longitud deltas) ) " archivos cambiados , "
-                   "Insertions : " (~v (contar-insertions deltas 0) ) " ,"
-                   "Deletions : " (~v (contar-deletions deltas 0) ) " .\n")))
-
-;delete , create 
-(define index->string
-  (lambda (index)
-    (translate-delta (get-primero(get-resto index))
-    (string-append "INDEX : \nWorkspace actual de index :" (string->workspace (get-primero(get-index zonas))) "\n" ))))
-
-;Funcion que traspasa el index a string mostrando el workspace guardado en ese index + los delta cambios
-;Dominio : index
-;Recorrido : String x String
-(define verificar-index-string
-  (lambda (zonas)
-    (if (string? (get-index zonas))
-        ;Si es sting get-index significa que esta vacío
-        (string-append (get-index zonas)"\n\n")
-        (index->string (get-index zonas) ))))
-
-;MAIN  zonas->string
-;ZONAS TO STRING
-;DEVUELVE TODAS LAZ ZONAS EN FORMA DE STRING
-;Dominio : Zonas
-;Salida :String x String
-(define zonas->string
-  (lambda (zonas)
-    (if (zonas? zonas)
-    (string-append (verificar-string-workspace zonas)
-                   (verificar-index-string zonas)
-                   (verificar-local-repository-string zonas)
-                   (verificar-remote-repository-string zonas))
-    "No es una zona el parametro entregado")))
-
-;Ejemplo correcto de uso :
-;(display (zonas->string zonas))
-;push
-;(display(zonas->string(comparar-commit (selectorIndice zonas 2) (selectorIndice zonas 3) zonas)))
 ;------------------------------------------------------------------------------------------------------
 ;(provide reconstruir-lista)
 ;(buscar "busqueda.c" (car zonas))
@@ -541,18 +332,12 @@
 (provide buscar-archivo)
 ;Pull
 (provide selector-nombre-fecha)
+(provide commit->local)
 ;pertenencia
 (provide zonas?)
-;constructores
-(provide get-namesN)
-;pull
+;push
 (provide commit->remote)
 ;add
-(provide generar-index)
-(provide delta-cambios)
+(provide get-last-workspace)
 ;commit
 (provide nuevo-commit-local)
-;zonas->string
-(provide zonas->string)
-;log
-(provide verificar-log)
