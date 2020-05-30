@@ -11,75 +11,88 @@ Requerimientos Funcionales :
 
 Requerimientos Funcionales Obligatorios :
 
-1. (0.5 pts) TDAs​ . ​ Implementar abstracciones apropiadas para el problema. Representación, Constructores, Funciones de Pertenencia, Selectores, Modificadores y Otras Funciones. 
+1. (0.5 pts) TDAs​ . ​ Implementar abstracciones apropiadas para el problema. Representación, Constructores, Funciones de Pertenencia, 
+Selectores, Modificadores y Otras Funciones. 
+
 PUNTAJE : 1
 
-2. (0.5 pts) git: ​ Función que permite aplicar los comandos (funciones en este caso) en el contexto de git sobre las zonas de trabajo. La función retorna una función que recibe los parámetros propios del comando que se pretende aplicar, procurando dejar un registro de histórico (opcional: añadir datos como fecha y hora) de los comandos expresados como funciones aplicados en el orden en que fueron aplicados . (git comando)
-PUNTAJE : 0.75 , no deja un registro historico
+2. (0.5 pts) git: ​ Función que permite aplicar los comandos (funciones en este caso) en el contexto de git sobre las zonas de trabajo. La 
+función retorna una función que recibe los parámetros propios del comando que se pretende aplicar, procurando dejar un registro de 
+histórico (opcional: añadir datos como fecha y hora) de los comandos expresados como funciones aplicados en el orden en que fueron 
+aplicados . (git comando)
 
-3. (0.5 pts) ​ pull​ : Función que retorna una lista con todos los cambios (commits) desde el RemoteRepository al LocalRepository registrados en las zonas de trabajo. Los cambios reflejados en el retorno de la función corresponden a una nueva versión de zonas donde
+PUNTAJE : 1
+
+3. (0.5 pts) ​ pull​ : Función que retorna una lista con todos los cambios (commits) desde el RemoteRepository al LocalRepository 
+registrados en las zonas de trabajo. Los cambios reflejados en el retorno de la función corresponden a una nueva versión de zonas donde
 se vean reflejados los cambios.
 
 Requisito base: Debe emplear recursión natural o de cola, siendo el estilo de recursión empleado distinto al usado en la función add.
 (pull zonas)
 ((git pull) zonas)) 
 
-PUNTAJE : 0.25  , solo añade los archivos si han sido creado recientemente
+PUNTAJE : 0.5 , trae los elementos 
 
-4. (1 pto) ​ add​ : Función que añade los cambios locales registrados en el Workspace al
-Index registrados en las zonas de trabajo. Puede hacerlo con la especificación de una
-lista de nombres de ​ archivos c ​ oncretos (nombres como strings) o bien sin especificar
-uno en particular (lista nula), con lo cual se añaden todos los archivos en que se
-registran cambios locales mediante la función add-all descrita en los requerimientos
-extras. En caso de no haber implementado add-all, retornar las zonas sin cambios. Los
-cambios reflejados en el retorno de la función corresponden a una nueva versión de
-zonas donde se vean reflejados los cambios.
-(add archivos)
+4. (1 pto) ​ add​ : Función que añade los cambios locales registrados en el Workspace al Index registrados en las zonas de trabajo. Puede 
+hacerlo con la especificación de una lista de nombres de ​ archivos concretos (nombres como strings) o bien sin especificar uno en 
+particular (lista nula), con lo cual se añaden todos los archivos en que se registran cambios locales mediante la función add-all 
+descrita en los requerimientos extras. En caso de no haber implementado add-all, retornar las zonas sin cambios. Los cambios reflejados 
+en el retorno de la función corresponden a una nueva versión de zonas donde se vean reflejados los cambios.
+
 ejemplos de uso: (((git add) (list “file1.rkt” “file2.rkt”)) zonas) ;idem para zonas
+
 (((git add) null) zonas) ;idem para zonas
-tip: función currificada
-5. (0.5 pts) ​ commit​ : Función que genera un commit con los cambios almacenados en
-index especificando un ​ mensaje descriptivo (un string) para llevarlos al LocalRepository.
-Los cambios reflejados en el retorno de la función corresponden a una nueva versión de
+
+PUNTAJE : 0.5 , aún no se añaden los cambios registrados , pero si mueve los archivos al index , en caso de estar recién creados .
+
+5. (0.5 pts) ​ commit​ : Función que genera un commit con los cambios almacenados en index especificando un ​ mensaje descriptivo (un
+string) para llevarlos al LocalRepository. Los cambios reflejados en el retorno de la función corresponden a una nueva versión de 
 zonas donde se vean reflejados los cambios.
-(commit mensaje)
+
 ejemplos de uso: (((git commit) “miCommit”) zonas) ;idem para zonas
-tip: función currificada
-6. (0.5 pts) ​ push​ : Función que envía los commit desde el repositorio local al repositorio
-remoto registrado en las zonas de trabajo. Los cambios reflejados en el retorno de la
-función corresponden a una nueva versión de zonas donde se vean reflejados los
-cambios.(push zonas)
+
+PUNTAJE : 1
+
+6. (0.5 pts) ​ push​ : Función que envía los commit desde el repositorio local al repositorio remoto registrado en las zonas de trabajo. 
+Los cambios reflejados en el retorno de la función corresponden a una nueva versión de zonas donde se vean reflejados los cambios.
+
 ejemplo de uso: ((git push) zonas)) ;idem para zonas
-7. (0.5 pts) ​ zonas->string​ : Función que recibe las zonas de trabajo y entrega una
-representación de las mismas como un string posible de visualizar de forma
-comprensible al usuario. Debe hacer uso del char ‘\n’ para los saltos de línea. ​ No utilice
-las funciones write y display dentro de esta función​ , ya que debe retornar un string
-el cual pueda luego ser pasado como argumento a la función “write” o “display” para
-poder visualizarlo de forma comprensible al usuario.
+
+PUNTAJE : 1
+
+7. (0.5 pts) ​ zonas->string​ : Función que recibe las zonas de trabajo y entrega una representación de las mismas como un string posible 
+de visualizar de forma comprensible al usuario. Debe hacer uso del char ‘\n’ para los saltos de línea. ​ No utilice las funciones write y display dentro de esta función​ , ya que debe retornar un string el cual pueda luego ser pasado como argumento a la función “write” o “display” para poder visualizarlo de forma comprensible al usuario.
+
 Requisito base: el string resultante al ser impreso por la función write o display
 debe ilustrar con claridad los elementos de cada zona de trabajo (i.e., workspace,
 index, localRepository y remoteRepository).
-(zonas->string zonas)
-Requerimientos extra (se consideran si y sólo si la evaluación de los requerimientos
-obligatorios es igual o superior a 4.0. La nota máxima que se puede alcanzar es un 7.0 en
-RF).
+
+PUNTAJE : 1
+
+
 8. (1 pto) status:​ Función que retorna un string con la información del ambiente de trabajo:
-● Archivos agregados al Index
-● Cantidad de commits en el Local Repository
-● La rama actual en la que se encuentra el Local Repository (predeterminado:
-“master” ​ )
+
+Archivos agregados al Index
+Cantidad de commits en el Local Repository
+La rama actual en la que se encuentra el Local Repository (predeterminado: “master” ​ )
+
 Debe hacer uso del char ‘\n’ para los saltos de línea. ​ No utilice las funciones write y
 display dentro de esta función​ , ya que debe retornar un string el cual pueda luego ser
 pasado como argumento a la función “write” o “display” para poder visualizarlo de forma
 comprensible al usuario.
-(status zonas)
+
 ejemplos de uso: ((git status) zonas)
+
+PUNTAJE : 0
+
 9. (1 pto) ​ log: Función que muestra los últimos 5 commits sobre el repositorio/rama actual,
 mostrando el mensaje asociado a cada commit. Debe hacer uso del char ‘\n’ para los
 saltos de línea. ​ No utilice las funciones write y display dentro de esta función​ , ya
 que debe retornar un string el cual pueda luego ser pasado como argumento a la función
 “write” o “display” para poder visualizarlo de forma comprensible al usuario.
 (log zonas)ejemplos de uso: ((git log) zonas)
+
+
 10. (1 pto) branch: Función que permite crear una nueva “rama” (flujo alternativo de los
 commits). De manera predeterminada, la nueva rama toma la historia del último commit.
 Las ramas deben tener un nombre, donde la rama predeterminada se llama ​ “master”.
@@ -109,17 +122,22 @@ Para efectos de este Laboratorio asuma que el Workspace contiene una cantidad in
 de archivos. Esta función debe ser implementada mediante evaluación perezosa. Los
 cambios reflejados en el retorno de la función corresponden a una nueva versión de
 zonas donde se vean reflejados los cambios.
-(add-all listaArchivos)
-ejemplos de uso: (((git add-all) null) zonas)tip: función currificada, evaluación perezosa
+
+(((git add-all) null) zonas)tip: función currificada, evaluación perezosa
+
 14. (1 pto) diff: Función que permite comparar y listar las diferencias entre la rama origen
 (sourceBranch) y la rama destino (targetBranch) especificadas mediante strings.
 Devuelve una lista con los archivos que difieren en cambios entre las ramas.
+
 (diff sourceBranch)
+
 ejemplos de uso: ((((git diff) sourceBranch) targetBranch) zonas)
+
 tip: función currificada
 
 
 Requerimientos No Funcionales :
+
 1. (obligatorio) Incluir autoevaluación de cada uno de los requerimientos funcionales (obligatorios y extras) solicitados.
 PUNTAJE :1
 

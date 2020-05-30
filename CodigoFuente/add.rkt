@@ -7,15 +7,16 @@
 ;Función : add , añade los cambios locales al index 
 ;Dominio : zonas
 ;Recorrido: lista de nombre s de archivos
-;Tipo de Recursión: recursion natural o de cola , siendo disntinto al de pull
-(define (add)
+;Tipo de Recursión: recursion natural , siendo disntinto al de pull
+(define add
   (lambda (lista)
     (if (list? lista)
         ;True case
         (lambda (zonas)
-          (if (zonas? zonas)
-              (if (string? (delta-cambios lista zonas))
-                  (delta-cambios lista zonas)
+          ;Pregunto, es una zona? , y si el workspace no esta vacío
+          (if (and (zonas? zonas) (not (null? (selectorIndice zonas 0))))
+              (if (verificar-nulos (delta-cambios lista zonas))
+              "No se procederá a realizar add , no hay cambios registrados" 
               (cambiar-elemento zonas 1 (delta-cambios lista zonas)))
               "Ingrese una zona válida"))
         ;False
@@ -26,10 +27,22 @@
 
 ;Add-----------------------------------------------------------------------------------------------------------------------
 ;En esta Sección se implementa la función add , la cual se trata de usar recursión natural en todas sus funciones
-
+;Función que verifica que no haya puros delta-cambios nulos
+;Dominio:Index
+;Recorrido: Boolean
+;Recursión de cola
+(define verificar-nulos
+  (lambda (index)
+    (define recorrer-delta
+      (lambda (delta)
+        (if (null? delta)
+            #t
+            (if (null? (get-primero delta))
+                (recorrer-delta (get-resto delta))
+                #f))))(recorrer-delta (selectorIndice index 1) )))
 ;Función que genera una lista con TODOS los nombres de archivos dentro de un workspace
 ;Dominio : Workspace ; Recorrido : lista
-;Recursión : Natural
+;Recursión : Natural 
 (define get-namesN
       (lambda (workspace)
         (if (null? workspace)
@@ -95,7 +108,7 @@
   (lambda (archivo workspace)
     ;veo si acaso existe el mismo nombre dentro del commit o un partial match
     (cond
-      ;CASO MUY ESPECIAL  :Que el último workspace se ecnuentre vacío
+      ;CASO MUY ESPECIAL , workspace vacío
       [(null? workspace) (list (get-primero archivo) (- (longitud archivo) 1) 0 (list (get-primero archivo))   #f #t )]
       ;Caso 1 que tengan el mismo nombre
       [(>= (buscar-archivo workspace (get-primero archivo)) 0 )
@@ -122,15 +135,17 @@
 ;Función que genera la lista con todos los index
 ;Dominio: Workspace con elq ue se quiere trabajar X last-workspace
 ;Recorrido : Lista de delta cambios
-;Recursión : Natural
+;Recursión : De cola , porque no funcionaba natural
 (define generar-lista-delta-cambios
   (lambda (workspace-guardado last-workspace)
+    (define get-lista
+      (lambda (workspace-guardado last-workspace lista-delta-cambios)
     (if (null? workspace-guardado)
-       ;Si mi e encuentro al final del wokspace-guardado
-       null
-       (cons
-        (generar-cambios-dos-archivos (get-primero workspace-guardado) last-workspace)
-        (generar-lista-delta-cambios (get-resto workspace-guardado) last-workspace)))))
+        ;Si nos encontramos al final del workspace que guardamos entregamos la lista de deltacambios
+        lista-delta-cambios
+       (get-lista (get-resto workspace-guardado) last-workspace
+(añadir-elemento lista-delta-cambios (generar-cambios-dos-archivos (get-primero workspace-guardado) last-workspace))))))
+    (get-lista workspace-guardado last-workspace null)))
 
 ;se añaden todos los archivos en que se registran cambios locales
 ;Función que añade todos los archivos requerridos al index
@@ -143,21 +158,17 @@
     ;Se asume que es un add all , en caso contrario se combinan los archivos del last commit
     (if (= (longitud lista) (longitud actual-workspace))
         ;Si es asi solo guardo el actual workspace
-        ;antes hago una verificacón acaso si mi actual-workspace y el último no son iguales
-        (cond [(equal? actual-workspace last-workspace)
-            "No se procederá a hace un add ya que no hay cambios realizados"]
-        [else
-         (cons
+        (cons
          (guardar-workspace-actual lista actual-workspace)
-         (generar-lista-delta-cambios (guardar-workspace-actual lista actual-workspace) last-workspace))])
+         (list(generar-lista-delta-cambios (guardar-workspace-actual lista actual-workspace) last-workspace)))
          
         ;si no es así guardo los archivos del workspace actual en conjunto de los archivos viejos
         (cons
          ;Actual+ viejo
          (guardar-workspace-actual-y-viejo lista actual-workspace last-workspace )
          ;Lista delta-cambios
-         (generar-lista-delta-cambios
-          (guardar-workspace-actual-y-viejo lista actual-workspace last-workspace ) last-workspace)))
+         (append (list(generar-lista-delta-cambios
+          (guardar-workspace-actual-y-viejo lista actual-workspace last-workspace ) last-workspace)))))
     ;Delta cambios
     ;Ahora los cambios realizados se compararan con los viejos
     ))
@@ -180,15 +191,20 @@
                 (verificar-lista (get-resto lista) zonas)
                 ;Sino se encuentran dentro del workspace
                 "Fatal error , los archivos entregados no existen en el workspace"))))
-    
     ;si no es nula la lista entregada , verifico que los nombres entregados si corresponden a los entregados.
     (if (not(null? lista))
         (if (equal? #t (verificar-lista lista (selectorIndice zonas 0)))
-            (generar-index lista (selectorIndice zonas 0) (get-last-workspace zonas) zonas)
+            ;Caso de que no haya ningún local-repository
+            (if (null? (selectorIndice zonas 2))
+                (generar-index lista (selectorIndice zonas 0) null zonas)
+            (generar-index lista (selectorIndice zonas 0) (get-last-workspace zonas) zonas))
             "Fatal error , los archivos entregados no existen en el workspace"
             )
         ;Creo una lista con todos los nombres de las funciones
-        (generar-index (get-namesN (selectorIndice zonas 0)) (selectorIndice zonas 0) (get-last-workspace zonas) zonas) )))
+        ;Caso de que no haya ningún local-repository
+        (if (null? (selectorIndice zonas 2))
+        (generar-index (get-namesN (selectorIndice zonas 0)) (selectorIndice zonas 0) null zonas)
+        (generar-index (get-namesN (selectorIndice zonas 0)) (selectorIndice zonas 0) (get-last-workspace zonas) zonas)) )))
 
 ;(delta-cambios (list) zonas)
 ;(get-last-workspace zonas)

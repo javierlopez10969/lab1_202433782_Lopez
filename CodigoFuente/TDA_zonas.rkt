@@ -77,6 +77,8 @@
    (list)
    
    ;END of REMOTE-REPOSITORY ----------------------------------------------------------------------------------
+   ;Registro Hisorico
+   (list)
    ))
 
 ;SELECTORES zonas
@@ -239,20 +241,40 @@
 ;---------------------------------------------------------------------------------------------------------------------------
 
 ;PULL--------------------------------------------------------------------------------------------------------------------
+;Función que actualiza el workspace según el último workspace
+;Dominio : Zonas X Ultimo-worskpace X Workspace
+;Recorrido : Zonas
+;Recursión de cola
+(define actualizar-workspace
+  (lambda (zonas last-workspace workspace)
+    (cond
+      ;pregunto si mi workspace esta vacío
+      [(not(string? (get-workspace zonas)))
+       ;Acá actualizo mi workspace con los cambios en el último workspace
+       (if (null? last-workspace)
+           zonas
+           (actualizar-workspace
+            ;Añado los archivos del ultimo workspace
+            ;Pregunto si acaso mi archivo en el workspace se encuentra en el workspace actual
+            (if (>= (buscar-archivo workspace (get-primero last-workspace)) 0) 
+                ;Si se encuentra lo actualizo
+                (cambiar-elemento zonas 0 (cambiar-elemento (selectorIndice zonas 0)
+                                                            (buscar-archivo workspace (get-primero last-workspace))
+                                                            (get-primero last-workspace)))
+                ;Si no se encuentra lo añado al inicio del workspace
+                (cambiar-elemento zonas 0 (añadir-al-inicio (selectorIndice zonas 0)
+                                                            (get-primero last-workspace))))
+            
+            (get-resto last-workspace) workspace))]
+      [(string? (get-workspace zonas))
+       (cambiar-elemento zonas 0 (get-last-workspace zonas))])))
+
 ;Función que mueve los commits del remote repository al local-repository
 ;Dominio : local-repository , remote-repository ,zonas
 ;Recorrido : Zonas || string
 ;Recursión : De cola ,porque asi lo solicita el enunciado
 (define commit->local
   (lambda (local remote zonas)
-    (define actualizar-workspace
-      (lambda (zonas)
-        (cond
-          ;pregunto si mi workspace esta vacío
-          [(not(string? (get-workspace zonas)))
-           ]
-          [(string? (get-workspace zonas))
-           (cambiar-elemento zonas 0 (get-last-workspace zonas))])))
     ;Función que actualiza local repository junto al con los commits de remote-repository
     ;Dominio : commits x zonas
     ;Recorrido : zonas
@@ -261,7 +283,8 @@
       (lambda (commits zonas)
         (if (null? commits)
             ;Aquí actualizo el workspace , porque ya agrege todos los commits
-            (actualizar-workspace zonas)
+            (actualizar-workspace zonas (get-last-workspace zonas) (selectorIndice zonas 0))
+            ;Hago la llamada recursiva de cola 
             (actualizar-local
              (get-resto commits)
              ;Actualizo el local-repository con los commits que no se encuentren en el local
@@ -272,7 +295,7 @@
        (actualizar-local (estan? remote local null) zonas )]
       ;En caso de que el local se encuentre actualizado , se lo informo al usuario
       [(null? (estan? remote local null))
-       "El local repository se encuentra actualizado , no se procederá a hacer push"])))
+       "El local repository se encuentra actualizado , no se procederá a hacer pull"])))
 ;---------------------------------------------------------------------------------------------------------------------------
 
 ;FUNCIONES DE PERETENECIA
@@ -282,7 +305,7 @@
 (define (zonas? funcion)
   (and
    (list? funcion)
-   (= 4 (longitud funcion))
+   (= 5 (longitud funcion))
    (list? (selectorIndice funcion 0))
    (list? (selectorIndice funcion 1))
    (list? (selectorIndice funcion 2))
@@ -309,7 +332,7 @@
      ;Creo una nueva zona con el local-repository con un nuevo commit
      (cambiar-elemento zonas 2
     ;añado al inicio el nuevo commit en el local-repository
-    (añadir-al-inicio (get-local-repository zonas) (crear-commit zonas comentario)))
+    (añadir-al-inicio (selectorIndice zonas 2) (crear-commit zonas comentario)))
     ;Creo una nueva zona con un index en limpio indice 1 , index . nuevo index
     1 (list))))
 ;Commit---------------------------------------------------------------------------------------------------------------------

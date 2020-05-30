@@ -71,6 +71,38 @@
               "\n\n")))))
         (recorrer-repository repository mensaje)))
 
+;git log , muestra los ultimos 5 commits realizados
+;Dominio : reositorio x string-previo
+;Recorrido : String
+;Recursión : De cola
+(define repository->stringLog
+  (lambda (repository mensaje)
+    (define recorrer-repository
+      (lambda (repository stringSalida indice)
+        ;Pregunto acaso si mi puedo seguir recorriendo mi local repository
+        (if (or (null? repository) (= 5 indice))
+            stringSalida
+            ;En caso de que aún no nos encontremos al final del local-repository
+            (recorrer-repository
+             (get-resto repository)
+             ;StringSalida
+             (string-append
+              stringSalida
+              "Date : " (tiempo->string (get-primero(get-resto (get-primero repository))))
+              "\n\n        "
+              (get-primero (get-primero repository)) "\n\n")
+             (+ indice 1)))))
+        (recorrer-repository repository mensaje 0)))
+
+(define verificar-log
+  (lambda (zonas)
+    (if (string? (get-local-repository zonas))
+        ;Si es sting get-local-repository significa que esta vacío
+        (string-append (get-local-repository zonas)"\n\n")
+        ;Si no lo es
+        (repository->stringLog (get-local-repository zonas) "\nLos Ultimos commits realizados fueron : \n\n"))))
+
+
 (define verificar-local-repository-string
   (lambda (zonas)
     (if (string? (get-local-repository zonas))
@@ -110,7 +142,7 @@
 (define index->string
   (lambda (index)
     (translate-delta (get-primero(get-resto index))
-    (string-append "\nINDEX : \nWorkspace actual de index :" (string->workspace (get-primero index)) "\n" ))))
+    (string-append "INDEX : \nWorkspace actual de index :" (string->workspace (get-primero(get-index zonas))) "\n" ))))
 
 ;Funcion que traspasa el index a string mostrando el workspace guardado en ese index + los delta cambios
 ;Dominio : index
@@ -143,3 +175,5 @@
 
 ;zonas->string
 (provide zonas->string)
+;log
+(provide verificar-log)
