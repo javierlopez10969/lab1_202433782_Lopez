@@ -102,6 +102,8 @@
   (lambda (lista nuevo-elemento)
     (reverse(añadir-elemento (reverse lista) nuevo-elemento))))
 
+
+
 (provide selectorIndice)
 (provide get-primero)
 (provide get-resto)

@@ -48,8 +48,14 @@
 (define zonas3
   (list
    ;Workspace
-   (list(list"main.c" "\n#include <stdio.h> \n" "int main (){ \n" "printf('Hola') }\n")
-        (list"busqueda.h" "\n#include <stdio.h>\n" "//funcion que realiza una busqueda\n"
+   (list(list"main.c"
+             "\n#include <stdio.h> \n"
+             "int main (){ \n"
+             "int arreglo [50] = {1,2,4,5,6,7} ;\n"
+             "//Realizamos la búsqueda\n")
+        (list"busqueda.h"
+             "\n#include <stdio.h>\n"
+             "//funcion que realiza una busqueda\n"
              "void busqueda (int * arreglo , elemento){\n"))
    ;Index
    (list)

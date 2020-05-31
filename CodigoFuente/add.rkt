@@ -17,7 +17,7 @@
           (if (and (zonas? zonas) (not (null? (selectorIndice zonas 0))))
               (if (verificar-nulos (delta-cambios lista zonas))
               "No se procederá a realizar add , no hay cambios registrados" 
-              (cambiar-elemento zonas 1 (delta-cambios lista zonas)))
+              (cambiar-elemento zonas 1 (borrar-nulos (delta-cambios lista zonas))))
               "Ingrese una zona válida"))
         ;False
         "ingrese una lista")))
@@ -27,7 +27,8 @@
 
 ;Add-----------------------------------------------------------------------------------------------------------------------
 ;En esta Sección se implementa la función add , la cual se trata de usar recursión natural en todas sus funciones
-;Función que verifica que no haya puros delta-cambios nulos
+
+;Función que verifica que no haya solamente delta-cambios nulos
 ;Dominio:Index
 ;Recorrido: Boolean
 ;Recursión de cola
@@ -40,6 +41,22 @@
             (if (null? (get-primero delta))
                 (recorrer-delta (get-resto delta))
                 #f))))(recorrer-delta (selectorIndice index 1) )))
+
+
+;Función que borre los elementos nulos dentro de index que no presenten cambios
+;Dominio:index
+;Recorrido : index 
+;Recursión : de cola
+(define borrar-nulos
+  (lambda (index)
+    (define borrar-delta
+      (lambda (delta)
+        ;Si el quitar un nulo hace que me devuelva el mismo delta 
+        (if (equal?  (remove null delta) delta)
+            delta
+            (borrar-delta (remove null delta)))))
+    (cambiar-elemento index 1 (borrar-delta (selectorIndice index 1)))))
+
 ;Función que genera una lista con TODOS los nombres de archivos dentro de un workspace
 ;Dominio : Workspace ; Recorrido : lista
 ;Recursión : Natural 
@@ -94,10 +111,30 @@
          ;sigo recorriendo la lista
          (guardar-workspace-actual (get-resto lista) actual-workspace)))))
 
-
+;Función que compara las inseciones y deletions ocurridas en un archivo con respecto al último commit en el local-repository
+;Dominio: Archivo x Arcħivo X Entero X Entero
+;Recorrido : Delta-Cambio
+;Recursión de Cola
 (define comparar-lineas
-  (lambda (archivo1 archivo2 insertions deletions)
-    (list 1 2)))
+  (lambda (archivo1 archivo2 deletions insertions name )
+    (cond
+      ;Si ambos archivos son nulos
+      [(and (null? archivo1) (null? archivo2))
+           (list name insertions deletions (list name) #f #f)]
+      ;Si mi archivo1 ya es nulo , empiezo a contar , deletions
+      [(and (null? archivo1) (not (null? archivo2)))
+       (comparar-lineas archivo1 (get-resto archivo2) (+ 1 deletions) insertions name)]
+      ;Si mi archivo2 ya es nulo , empiezo a contar , insertions
+      [(and (not(null? archivo1)) (null? archivo2))
+       (comparar-lineas (get-resto archivo1) archivo2 deletions (+ 1 insertions) name)]
+      ;Si ambas lineas son iguales , no agrego nada
+      [(equal? (get-primero archivo1) (get-primero archivo2))
+       (comparar-lineas (get-resto archivo1) (get-resto archivo2) deletions insertions name )]
+      ;Si no son iguales agrego deletions como insertions
+      [(not (equal? (get-primero archivo1) (get-primero archivo2)))
+       (comparar-lineas (get-resto archivo1) (get-resto archivo2) (+ 1 deletions) (+ 1 insertions) name )]
+      
+    )))
 
 ;Función constructora delta cambios según el último commit realizado dentro del local repository
 ;Funcion que genera cambios de una archivo con respecto al ultimo commit
@@ -112,16 +149,16 @@
       [(null? workspace) (list (get-primero archivo) (- (longitud archivo) 1) 0 (list (get-primero archivo))   #f #t )]
       ;Caso 1 que tengan el mismo nombre
       [(>= (buscar-archivo workspace (get-primero archivo)) 0 )
-       ;Si encuentro el nombre del archivo , ahora pregunto si tienen el mismo contenido
        (cond
-         [(equal?
-           (selectorIndice workspace (buscar-archivo workspace (get-primero archivo)))
-           archivo)
+         ;Si encuentro el nombre del archivo , ahora pregunto si tienen el mismo contenido
+         [(equal? (selectorIndice workspace (buscar-archivo workspace (get-primero archivo)))archivo)
           ;Si tienen el mismo contenido y nombre devuelvo null
           null]
          ;si no tienen el mismo contenido voy comparando linea por linea que se cambio
          ;deletions and insertions
-         [else (list (get-primero archivo)  ) ])
+         [else
+          (comparar-lineas archivo (selectorIndice workspace (buscar-archivo workspace (get-primero archivo)) ) 0 0
+                                (get-primero archivo))])
        ]
       ;Caso 2 que tengan el mismo contenido    
       ;Caso de que ya no existe
