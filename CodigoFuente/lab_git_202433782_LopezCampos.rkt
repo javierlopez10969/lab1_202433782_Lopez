@@ -181,12 +181,13 @@
 ;(display(zonas->string (((git add)(list "main.c"))zonas) ))
 
 ;commit
-
-;(zonas->string  (((git commit)"New workspace")(((git add)null)zonas)))
+;(((git commit)"New workspace")(((git add)null)zonas))
+;(display(zonas->string  (((git commit)"New workspace")(((git add)null)zonas))))
 
 ;Push
 
 ;((git push) (((git commit)"New workspace")(((git add)null)zonas)))
+;(display(zonas->string ((git push) (((git commit)"New workspace")(((git add)null)zonas))) ))
 
 ;Otro ejemplo de add
 

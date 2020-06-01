@@ -1,0 +1,5 @@
+Abra la carpeta de código fuente
+Y abrá el archivo "lab_git_202433782_LopezCampos.rkt" con el IDE DrRacket
+Ahora dirigase al final hasta que encuentre la linea 170 con los ejemplos de uso
+Si quiere probar un comando borre el ; que inicia el comentario y presione ejecutar.
+Se le presentan distintos ejemplos y combinanciones de los ocmandos para que analize los alcances del programa
