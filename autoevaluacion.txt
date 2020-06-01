@@ -31,7 +31,8 @@ Requisito base: Debe emplear recursión natural o de cola, siendo el estilo de r
 (pull zonas)
 ((git pull) zonas)) 
 
-PUNTAJE : 0.5 , trae los elementos 
+PUNTAJE : 0.75 , trae los elementos , pero se desconoce si en algún caso pueda otorgar problemas o cual es su alncanze en su
+ implementación
 
 4. (1 pto) ​ add​ : Función que añade los cambios locales registrados en el Workspace al Index registrados en las zonas de trabajo. Puede 
 hacerlo con la especificación de una lista de nombres de ​ archivos concretos (nombres como strings) o bien sin especificar uno en 
@@ -43,7 +44,7 @@ ejemplos de uso: (((git add) (list “file1.rkt” “file2.rkt”)) zonas) ;ide
 
 (((git add) null) zonas) ;idem para zonas
 
-PUNTAJE : 0.5 , aún no se añaden los cambios registrados , pero si mueve los archivos al index , en caso de estar recién creados .
+PUNTAJE : 0.75, reconoce archivos con cambios conrespecto al último commit local , pero no logra reconocer cuando se borra una archivo, si logra reconocer cuando un archivo se crea o presenta cambios. Además que si se entrega una lista null , logra agarrar todos los archivos , y tambien si se ingresa una lista con elementos particualres.
 
 5. (0.5 pts) ​ commit​ : Función que genera un commit con los cambios almacenados en index especificando un ​ mensaje descriptivo (un
 string) para llevarlos al LocalRepository. Los cambios reflejados en el retorno de la función corresponden a una nueva versión de 
@@ -76,39 +77,35 @@ Archivos agregados al Index
 Cantidad de commits en el Local Repository
 La rama actual en la que se encuentra el Local Repository (predeterminado: “master” ​ )
 
-Debe hacer uso del char ‘\n’ para los saltos de línea. ​ No utilice las funciones write y
-display dentro de esta función​ , ya que debe retornar un string el cual pueda luego ser
-pasado como argumento a la función “write” o “display” para poder visualizarlo de forma
-comprensible al usuario.
-
 ejemplos de uso: ((git status) zonas)
+
+PUNTAJE : 1
+
+9. (1 pto) ​ log: Función que muestra los últimos 5 commits sobre el repositorio/rama actual, mostrando el mensaje asociado a cada commit.
+
+(log zonas)ejemplos de uso: ((git log) zonas)
+
+PUNTAJE : 1
+
+10. (1 pto) branch: Función que permite crear una nueva “rama” (flujo alternativo de los commits). De manera predeterminada, la nueva
+rama toma la historia del último commit.
+
+(branch nombreRama)
+
+ejemplos de uso: (((git branch) “development”) zonas)
 
 PUNTAJE : 0
 
-9. (1 pto) ​ log: Función que muestra los últimos 5 commits sobre el repositorio/rama actual,
-mostrando el mensaje asociado a cada commit. Debe hacer uso del char ‘\n’ para los
-saltos de línea. ​ No utilice las funciones write y display dentro de esta función​ , ya
-que debe retornar un string el cual pueda luego ser pasado como argumento a la función
-“write” o “display” para poder visualizarlo de forma comprensible al usuario.
-(log zonas)ejemplos de uso: ((git log) zonas)
+11. (0,5 pts) checkout: Función que permite cambiar de la rama actual a una rama específica por su nombre (string). Para cambiar a la
+rama por defecto, se debe invocar la función con el argumento ​ “master”. ​ Los cambios reflejados en el retorno de la función corresponden
+a una nueva versión de zonas donde se vean reflejados los cambios.
 
-
-10. (1 pto) branch: Función que permite crear una nueva “rama” (flujo alternativo de los
-commits). De manera predeterminada, la nueva rama toma la historia del último commit.
-Las ramas deben tener un nombre, donde la rama predeterminada se llama ​ “master”.
-Los cambios reflejados en el retorno de la función corresponden a una nueva versión de
-zonas donde se vean reflejados los cambios.
-(branch nombreRama)
-ejemplos de uso: (((git branch) “development”) zonas)
-tip: función currificada
-11. (0,5 pts) checkout: Función que permite cambiar de la rama actual a una rama
-específica por su nombre (string). Para cambiar a la rama por defecto, se debe invocar
-la función con el argumento ​ “master”. ​ Los cambios reflejados en el retorno de la función
-corresponden a una nueva versión de zonas donde se vean reflejados los cambios.
 (checkout nombreRama)
-ejemplos de uso: (((git branch) “development”) zonas)
-(((git branch) “master”) zonas)
-tip: función currificada
+
+ejemplos de uso: (((git branch) “development”) zonas) (((git branch) “master”) zonas)
+
+PUNTAJE : 0
+
 12. (2 pts) merge: Función que permite tomar los cambios de otra rama (especificada por
 su nombre como un string) y sobreescribirlos en la rama actual. En la rama destino
 quedan los commits de la rama origen que no están en la rama destino. Además se
@@ -117,24 +114,23 @@ reflejados en el retorno de la función corresponden a una nueva versión de zon
 se vean reflejados los cambios.
 (merge nombreRama)
 ejemplos de uso: (((git merge) “development”) zonas)
+
+PUNTAJE : 0
+
 13. (2 pts) add-all: Función que permite agregar todos los archivos del Workspace al Index.
-Para efectos de este Laboratorio asuma que el Workspace contiene una cantidad infinita
-de archivos. Esta función debe ser implementada mediante evaluación perezosa. Los
-cambios reflejados en el retorno de la función corresponden a una nueva versión de
-zonas donde se vean reflejados los cambios.
 
 (((git add-all) null) zonas)tip: función currificada, evaluación perezosa
 
-14. (1 pto) diff: Función que permite comparar y listar las diferencias entre la rama origen
-(sourceBranch) y la rama destino (targetBranch) especificadas mediante strings.
-Devuelve una lista con los archivos que difieren en cambios entre las ramas.
+PUNTAJE : 0
+
+14. (1 pto) diff: Función que permite comparar y listar las diferencias entre la rama origen (sourceBranch) y la rama destino
+(targetBranch) especificadas mediante strings. Devuelve una lista con los archivos que difieren en cambios entre las ramas.
 
 (diff sourceBranch)
 
 ejemplos de uso: ((((git diff) sourceBranch) targetBranch) zonas)
 
-tip: función currificada
-
+PUNTAJE : 0
 
 Requerimientos No Funcionales :
 

@@ -2,7 +2,7 @@
 ;FUNCION : calcular longitud o length , su implmentación es solo para saber como funcionaba 
 ;Dominio: lista x lista
 ;Recorrido : Entero x Entero
-;Recursion Natural  , ya que deja espacios pendientes
+;Recursion Natural  , ya que deja espacios pendientes 
 (define longitud
    (lambda (lista)
      ;Pregunto si acaso el elemento entregado acaso es una lista
@@ -17,10 +17,16 @@
 
 ;FUNCIONES ANEXAS
 ;Get primero = sinonimo de car
+;Dominio:Lista
+;Recorrido: Elemento
 (define get-primero car)
 ;Get resto = sinonimo de cdr
+;Dominio:Lista
+;Recorrido: Elemento
 (define get-resto cdr)
 ;Selector de Zonas segun indice sinonimo de list-ref
+;Dominio:Lista x Indice
+;Recorrido: Elemento dentro de lista
 (define selectorIndice
   (lambda (elemento indice)
     (define actuador(lambda (elemento indice)
@@ -35,7 +41,9 @@
     ;Else
     "Indice Fuera de rango")))
 
-;Función la cual crea en ese instante una lista con losdatos de la fecha de ese instante
+;Función la cual crea en ese instante una lista con los datos de la fecha de ese instante
+;Dominio:Void
+;Recorrido: Lista
 (define get-lista-tiempo
   (lambda ()
     (list
@@ -46,8 +54,10 @@
      (date-month (seconds->date (current-seconds)))
      (date-year (seconds->date (current-seconds))))))
 ;(define lista (get-lista-tiempo))
+
 ;Funcion traductora a string para que se más comprensible para el ususario
 ;Dominio: Lista
+;Recorrido : String
 (define tiempo->string
   (lambda (listaTiempo)
     (string-append (~v (selectorIndice listaTiempo 0))":"
@@ -97,7 +107,9 @@
          (get-primero lista)
          ;En caso contrario sigo recorriendo la lista recursivamente 
          (añadir-elemento (get-resto lista) nuevo-elemento)))))
-
+;Función que añade al inicio un elemento
+;Dominio : lista x elemento
+;Recorrido : Lista
 (define añadir-al-inicio
   (lambda (lista nuevo-elemento)
     (reverse(añadir-elemento (reverse lista) nuevo-elemento))))

@@ -4,6 +4,7 @@
 (require "TDA_zonas.rkt")
 
 ;Archivo donde se encuentra la función add
+;----------------------------------------------------------------------------------------------------------------
 ;Función : add , añade los cambios locales al index 
 ;Dominio : zonas
 ;Recorrido: lista de nombre s de archivos
@@ -27,6 +28,7 @@
 
 ;Add-----------------------------------------------------------------------------------------------------------------------
 ;En esta Sección se implementa la función add , la cual se trata de usar recursión natural en todas sus funciones
+;Ya que eso se indica en los requerimientos
 
 ;Función que verifica que no haya solamente delta-cambios nulos
 ;Dominio:Index
@@ -51,10 +53,12 @@
   (lambda (index)
     (define borrar-delta
       (lambda (delta)
-        ;Si el quitar un nulo hace que me devuelva el mismo delta 
+        ;Si el quitar un nulo hace que me devuelva el mismo delta , devuelvo el delta
         (if (equal?  (remove null delta) delta)
             delta
+            ;si no sigo borrando
             (borrar-delta (remove null delta)))))
+    ;Llamo a la función para que borre los distintos nulos
     (cambiar-elemento index 1 (borrar-delta (selectorIndice index 1)))))
 
 ;Función que genera una lista con TODOS los nombres de archivos dentro de un workspace
@@ -62,8 +66,10 @@
 ;Recursión : Natural 
 (define get-namesN
       (lambda (workspace)
+        ;Me encuentro al final del workspace?
         (if (null? workspace)
             null
+            ;No? devuelvo un par y dentro hago una llamada recursiva hasta llegar a null
             (cons
              ;Recursión natural
              (get-primero(get-primero workspace))
@@ -81,12 +87,13 @@
     (get-lista-salida workspace null)))
 ;(get-names (get-workspace zonas))
 
-;Función que solo guarda los archivos actuales del workspace
+;Función que solo guarda los archivos que se indiquen en lista
 ;Dominio : Lista Con nombres de archivos X Workspace actual donde se buscan los nombres de los archivos
 ;Recorrido : Workspace
 ;Recursión : Natural
 (define guardar-workspace-actual
   (lambda (lista actual-workspace)
+    ;Estoy al final de mi lista?
     (if (null? lista)
         null
         (cons
@@ -103,7 +110,7 @@
   (lambda (lista actual-workspace last-workspace)
     ;Me encuentro al final de la lista del actual workspace?
     (if (null? lista)
-        ;Ahora sigo recorriendo el veijo workspace sin los archivos que ya agrege
+        ;Ahora sigo recorriendo el veijo workspace sin los archivos que ya agrege;no se logro a implementar
         null
         (cons
          ;Guardo el archivo segun su nombre
@@ -245,10 +252,6 @@
 
 ;(delta-cambios (list) zonas)
 ;(get-last-workspace zonas)
-
-
-
-
 
 ;Zona de provide
 (provide add)
